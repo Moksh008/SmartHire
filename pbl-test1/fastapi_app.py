@@ -65,7 +65,7 @@ def get_detectors():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "https://smart-hire-8ysf.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
