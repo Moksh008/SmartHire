@@ -1,0 +1,87 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: oklch(0.98 0.01 90); /* #fffbf0 */
+  --color-foreground: oklch(0.1 0 0);
+
+  --color-muted: oklch(0.95 0.01 90);
+  --color-muted-foreground: oklch(0.4 0 0);
+
+  --color-popover: oklch(0.98 0.01 90);
+  --color-popover-foreground: oklch(0.1 0 0);
+
+  --color-border: oklch(0.1 0 0);
+  --color-input: oklch(0.1 0 0);
+
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.1 0 0);
+
+  --color-primary: oklch(0.1 0 0);
+  --color-primary-foreground: oklch(0.98 0.01 90);
+
+  --color-secondary: oklch(0.9 0 0);
+  --color-secondary-foreground: oklch(0.1 0 0);
+
+  --color-accent: oklch(0.8 0.1 110); /* Lime-ish */
+  --color-accent-foreground: oklch(0.1 0 0);
+
+  --color-destructive: oklch(0.4 0.2 25);
+  --color-destructive-foreground: oklch(0.98 0.01 90);
+
+  --color-ring: oklch(0.1 0 0);
+
+  --color-sidebar-background: oklch(0.98 0.01 90);
+  --color-sidebar-foreground: oklch(0.1 0 0);
+  --color-sidebar-primary: oklch(0.1 0 0);
+  --color-sidebar-primary-foreground: oklch(0.98 0.01 90);
+  --color-sidebar-accent: oklch(0.8 0.2 110); /* Lime highlight */
+  --color-sidebar-accent-foreground: oklch(0.1 0 0);
+  --color-sidebar-border: oklch(0.1 0 0);
+  --color-sidebar-ring: oklch(0.1 0 0);
+
+  --radius-lg: 0px; /* Sharp corners for Brutalist */
+  --radius-md: 0px;
+  --radius-sm: 0px;
+  
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-sans: 'Space Grotesk', sans-serif;
+  --font-marker: 'Permanent Marker', cursive;
+}
+
+@utility glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@utility neon-glow {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3), 0 0 30px rgba(129, 140, 248, 0.2);
+}
+
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

@@ -1,0 +1,115 @@
+"""
+Agent 5 — Interview Evaluator
+Generates qualitative feedback based on candidate's answers to the interview questions.
+"""
+
+import json
+import requests
+import re
+from typing import List
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "qwen2.5-coder:7b"
+
+def _analyze_filler_words(answers: List[dict]) -> dict:
+    fillers = ["um", "ah", "uh", "like", "you know", "actually", "basically"]
+    count = 0
+    total_words = 0
+    detected = {}
+    
+    for item in answers:
+        text = item.get("answer", "").lower()
+        words = text.split()
+        total_words += len(words)
+        for f in fillers:
+            # Use regex for word boundary matching
+            matches = len(re.findall(rf"\b{f}\b", text))
+            count += matches
+            if matches > 0:
+                detected[f] = detected.get(f, 0) + matches
+    
+    filler_rate = (count / total_words * 100) if total_words > 0 else 0
+    
+    return {
+        "filler_count": count,
+        "filler_rate": round(filler_rate, 2),
+        "detected_fillers": detected,
+        "total_words": total_words
+    }
+
+
+def _ollama_generate(prompt: str) -> str:
+    payload = {
+        "model": MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.3,
+            "num_predict": 512,
+        },
+    }
+    try:
+        resp = requests.post(OLLAMA_URL, json=payload, timeout=300)
+        if resp.status_code == 404:
+            raise RuntimeError(f"[agent_5] Model '{MODEL}' not found. Run: ollama pull {MODEL}")
+        resp.raise_for_status()
+        return resp.json().get("response", "").strip()
+    except requests.exceptions.ConnectionError:
+        raise RuntimeError("[agent_5] Ollama is not running. Start it with: ollama serve")
+
+def _build_prompt(answers: List[dict]) -> str:
+    context = ""
+    for idx, item in enumerate(answers):
+        context += f"Q{idx+1}: {item.get('question')}\nA{idx+1}: {item.get('answer')}\n\n"
+
+    return f"""You are a technical interviewer evaluating a candidate's responses.
+
+Candidate's Answers:
+{context}
+
+Based on these answers, provide constructive feedback on the candidate's performance. Return ONLY valid JSON, no extra text, directly parseable by json.loads().
+
+{{
+  "overall_impression": "1-2 sentence overall impression.",
+  "strengths": ["strength 1", "strength 2"],
+  "areas_for_improvement": ["area 1", "area 2"],
+  "technical_accuracy": "A brief comment on technical accuracy.",
+  "vocal_confidence": "Comment on clarity, pacing, and use of filler words."
+}}"""
+
+def run(answers: List[dict]) -> dict:
+    if not answers:
+        return {
+            "overall_impression": "No answers provided.",
+            "strengths": [],
+            "areas_for_improvement": ["Please provide answers during the interview."],
+            "technical_accuracy": "N/A"
+        }
+
+    prompt = _build_prompt(answers)
+    print(f"[agent_5] Evaluating interview answers via {MODEL}...")
+    
+    try:
+        raw = _ollama_generate(prompt)
+        clean = raw.replace("```json", "").replace("```", "").strip()
+        start = clean.find("{")
+        end = clean.rfind("}") + 1
+        if start != -1 and end > start:
+            clean = clean[start:end]
+
+        data = json.loads(clean)
+        
+        # Merge voice analysis
+        voice_stats = _analyze_filler_words(answers)
+        data["voice_analysis"] = voice_stats
+        
+        return data
+
+    except Exception as e:
+        print(f"[agent_5] Parse failed ({e}), using fallback")
+        return {
+            "overall_impression": "The candidate provided answers, but the detailed evaluation could not be completed.",
+            "strengths": ["Communicated during the interview"],
+            "areas_for_improvement": ["Need more detailed technical responses"],
+            "technical_accuracy": "Evaluation unavailable."
+        }
