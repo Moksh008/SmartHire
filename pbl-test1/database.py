@@ -247,14 +247,27 @@ def delete_job(job_id: int) -> bool:
 def create_resume(candidate_email: str, file_path: str, file_name: str, jd_id: Optional[int], analysis_data: dict) -> Resume:
     db = SessionLocal()
     try:
+        # Check if ats_score is nested inside ats_result
+        ats_score = analysis_data.get("ats_score")
+        if ats_score is None:
+            ats_score = analysis_data.get("ats_result", {}).get("ats_score", 0.0)
+            
+        matching_skills = analysis_data.get("matching_skills")
+        if matching_skills is None:
+            matching_skills = analysis_data.get("ats_result", {}).get("matching_skills", [])
+            
+        missing_skills = analysis_data.get("missing_skills")
+        if missing_skills is None:
+            missing_skills = analysis_data.get("ats_result", {}).get("missing_skills", [])
+
         resume = Resume(
             candidate_email=candidate_email,
             file_path=file_path,
             file_name=file_name,
             jd_id=jd_id,
-            ats_score=analysis_data.get("ats_score", 0.0),
-            matching_skills=analysis_data.get("matching_skills", []),
-            missing_skills=analysis_data.get("missing_skills", []),
+            ats_score=ats_score,
+            matching_skills=matching_skills,
+            missing_skills=missing_skills,
             analysis_data=analysis_data
         )
         db.add(resume)
