@@ -44,6 +44,7 @@ app.add_middleware(
         "https://smart-hire-8ysf.vercel.app",
         "https://smarthire-moksh.vercel.app"
     ],
+    allow_origin_regex="https://.*\\.vercel\\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
