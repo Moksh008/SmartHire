@@ -41,7 +41,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "https://smart-hire-8ysf.vercel.app"
+        "https://smart-hire-8ysf.vercel.app",
+        "https://smarthire-moksh.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
