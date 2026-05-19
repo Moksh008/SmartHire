@@ -27,6 +27,18 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 
+class SessionLog(Base):
+    __tablename__ = "session_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, index=True, nullable=False)
+    screener_data = Column(JSON, nullable=True)
+    integrity_logs = Column(JSON, default=list)
+    suspicion_score = Column(Float, default=0.0)
+    start_time = Column(DateTime, default=datetime.utcnow)
+    extra_data = Column(JSON, default=dict)
+
+
 class User(Base):
     __tablename__ = "users"
 

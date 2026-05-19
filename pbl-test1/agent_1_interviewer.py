@@ -6,13 +6,15 @@ Uses MCP tools to pull relevant resume context dynamically.
 """
 
 import json
+import os
 import requests
 
 from models import ATSResult, EvaluationResult, InterviewQuestions
 from mcp_tools import call_tool
+from logger import logger
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "qwen2.5-coder:7b"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
 
 def _ollama_generate(prompt: str) -> str:
@@ -94,7 +96,7 @@ def run(ats_result: ATSResult, eval_result: EvaluationResult) -> InterviewQuesti
 
     prompt = _build_prompt(ats_result, eval_result, skills_context, exp_context)
 
-    print(f"[agent_1] Generating interview questions via {MODEL}...")
+    logger.info(f"Generating interview questions via {MODEL}...")
     raw = _ollama_generate(prompt)
 
     try:
@@ -113,8 +115,8 @@ def run(ats_result: ATSResult, eval_result: EvaluationResult) -> InterviewQuesti
         if not technical and not behavioral and not scenario_based:
             raise ValueError("All question lists empty")
 
-        print(f"[agent_1] Generated {len(technical)} technical, "
-              f"{len(behavioral)} behavioral, {len(scenario_based)} scenario questions")
+        logger.info(f"Generated {len(technical)} technical, "
+                    f"{len(behavioral)} behavioral, {len(scenario_based)} scenario questions")
 
         return InterviewQuestions(
             technical=technical,
@@ -123,7 +125,7 @@ def run(ats_result: ATSResult, eval_result: EvaluationResult) -> InterviewQuesti
         )
 
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"[agent_1] Parse failed ({e}), using fallback")
+        logger.warning(f"Parse failed ({e}), using fallback questions")
         matched = [m.requirement for m in ats_result.matching_skills[:3]]
         missing = [m.requirement for m in ats_result.missing_skills[:3]]
         return InterviewQuestions(

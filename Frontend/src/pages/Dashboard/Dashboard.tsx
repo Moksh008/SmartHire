@@ -1,17 +1,16 @@
 import { Navigate } from "react-router-dom"
 import RecruiterDashboard from "@/pages/Recruiter/RecruiterDashboard"
 import IndividualDashboard from "@/pages/Individual/IndividualDashboard"
+import { useAuth } from "@/context/AuthContext"
 
 export default function Dashboard() {
-  const userStr = localStorage.getItem("user")
+  const { user, role } = useAuth()
   
-  if (!userStr) {
+  if (!user) {
     return <Navigate to="/login" replace />
   }
-
-  const user = JSON.parse(userStr)
   
-  if (user.role === "RECRUITER") {
+  if (role === "RECRUITER") {
     return <RecruiterDashboard />
   }
 

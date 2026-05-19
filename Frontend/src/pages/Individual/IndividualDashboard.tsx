@@ -133,23 +133,23 @@ export default function IndividualDashboard() {
           </button>
         </header>
 
-        <main className="p-8 md:p-12 lg:p-16 w-full max-w-[1600px] mx-auto min-h-[calc(100svh-5rem)]">
-          <div className="max-w-7xl mx-auto space-y-16">
+        <main className="p-4 sm:p-8 md:p-12 lg:p-16 w-full max-w-[1600px] mx-auto min-h-[calc(100svh-5rem)]">
+          <div className="max-w-7xl mx-auto space-y-10 sm:space-y-16">
             {/* Hero Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-12">
                <div className="space-y-4">
                   <div className="inline-block bg-black/5 text-black/60 px-3 py-1 text-xs font-semibold rounded-full">
                     Candidate Overview
                   </div>
-                  <h1 className="text-4xl md:text-5xl font-bold text-black tracking-tight leading-tight">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-black tracking-tight leading-tight">
                     Welcome back
                   </h1>
-                  <p className="text-black/60 font-medium text-lg max-w-2xl leading-relaxed">
+                  <p className="text-black/60 font-medium text-base sm:text-lg max-w-2xl leading-relaxed">
                     Track your assessment performance and review AI-driven insights to improve your profile.
                   </p>
                </div>
                <div className="flex gap-4">
-                  <button className="h-12 px-6 bg-black text-[#ccff00] font-semibold rounded-xl shadow-lg shadow-black/5 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-3">
+                  <button className="w-full sm:w-auto h-12 px-6 bg-black text-[#ccff00] font-semibold rounded-xl shadow-lg shadow-black/5 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3">
                     <Link to="/individual/assessment" className="flex items-center gap-3">
                       Start Session
                       <ArrowUpRight className="w-5 h-5" />
@@ -157,11 +157,11 @@ export default function IndividualDashboard() {
                   </button>
                </div>
             </div>
-
+ 
             {/* Top Row: Metrics & Suggestions */}
-            <div className="grid lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
                {/* Metrics Column */}
-               <div className="lg:col-span-1 space-y-10">
+               <div className="lg:col-span-1 space-y-6 sm:space-y-10">
                   <div className="grid grid-cols-2 gap-6">
                      <div className="p-8 bg-white rounded-3xl border border-black/5 shadow-sm flex flex-col justify-between h-52 hover:shadow-md transition-all">
                         <div className="flex items-center gap-3">
@@ -207,28 +207,28 @@ export default function IndividualDashboard() {
                </div>
 
                {/* Suggestions Column */}
-               <div className="lg:col-span-2 p-10 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-100 transition-opacity">
-                     <div className="w-24 h-24 bg-[#ff5e00]/20 text-[#ff5e00] rounded-3xl flex items-center justify-center transition-transform">
-                        <Lightbulb className="w-12 h-12" />
-                     </div>
-                  </div>
-                  
-                  <div className="relative z-10 space-y-10">
-                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#ff5e00]/10 text-[#ff5e00] rounded-2xl flex items-center justify-center">
-                           <Sparkles className="w-6 h-6" />
-                        </div>
-                        <div>
-                           <h3 className="text-2xl font-bold text-black tracking-tight">Resume Intelligence</h3>
-                           <p className="text-black/40 font-bold text-[10px] uppercase tracking-widest mt-1">
-                             Asset: {suggestions?.file_name || "System Null"}
-                           </p>
-                        </div>
-                     </div>
+                <div className="lg:col-span-2 p-5 sm:p-10 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 p-5 sm:p-10 opacity-10 group-hover:opacity-100 transition-opacity hidden sm:block">
+                      <div className="w-24 h-24 bg-[#ff5e00]/20 text-[#ff5e00] rounded-3xl flex items-center justify-center transition-transform">
+                         <Lightbulb className="w-12 h-12" />
+                      </div>
+                   </div>
+                   
+                   <div className="relative z-10 space-y-10">
+                      <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 bg-[#ff5e00]/10 text-[#ff5e00] rounded-2xl flex items-center justify-center">
+                            <Sparkles className="w-6 h-6" />
+                         </div>
+                         <div>
+                            <h3 className="text-2xl font-bold text-black tracking-tight">Resume Intelligence</h3>
+                            <p className="text-black/40 font-bold text-[10px] uppercase tracking-widest mt-1">
+                              Asset: {suggestions?.file_name || "System Null"}
+                            </p>
+                         </div>
+                      </div>
 
-                     {suggestions?.missing_skills && suggestions.missing_skills.length > 0 ? (
-                        <div className="grid md:grid-cols-2 gap-10">
+                      {suggestions?.missing_skills && suggestions.missing_skills.length > 0 ? (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                            <div className="space-y-6">
                               <h4 className="text-[10px] font-bold text-black/40 uppercase tracking-widest flex items-center gap-2">
                                  <AlertCircle className="w-4 h-4 text-[#ff5e00]" />
@@ -303,17 +303,17 @@ export default function IndividualDashboard() {
                 {history.length > 0 ? history.map((assessment, idx) => (
                   <div
                     key={assessment.id}
-                    className="p-8 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-8 group"
+                    className="p-5 sm:p-8 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8 group"
                   >
                     <div className="flex items-center gap-6">
-                      <div className="w-14 h-14 rounded-2xl bg-black/5 text-black flex items-center justify-center text-xl font-bold transition-transform group-hover:scale-105">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-black/5 text-black flex items-center justify-center text-lg sm:text-xl font-bold transition-transform group-hover:scale-105 shrink-0">
                         {idx + 1}
                       </div>
                       <div className="space-y-1">
-                        <p className="font-bold text-black text-xl tracking-tight">
+                        <p className="font-bold text-black text-lg sm:text-xl tracking-tight">
                           Assessment Session
                         </p>
-                        <div className="flex items-center gap-4 text-black/40">
+                        <div className="flex flex-wrap items-center gap-4 text-black/40">
                            <div className="flex items-center gap-2">
                              <Clock className="w-3 h-3" />
                              <span className="font-bold text-[10px] uppercase tracking-widest">
@@ -330,26 +330,26 @@ export default function IndividualDashboard() {
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-12 lg:gap-16">
+                    <div className="flex flex-wrap items-center justify-between lg:justify-end gap-6 sm:gap-10 lg:gap-16 border-t border-black/5 lg:border-none pt-4 lg:pt-0">
                       <div className="text-left">
-                        <p className="text-3xl font-bold text-black tracking-tighter">{assessment.mcq_score.toFixed(0)}%</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-black tracking-tighter">{assessment.mcq_score.toFixed(0)}%</p>
                         <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest mt-1">Tech Match</p>
                       </div>
                       <div className="text-left">
-                        <p className="text-3xl font-bold text-black tracking-tighter">
+                        <p className="text-2xl sm:text-3xl font-bold text-black tracking-tighter">
                           {assessment.integrity_score.toFixed(0)}%
                         </p>
                         <p className="text-[10px] font-bold text-black/40 uppercase tracking-widest mt-1">Trust Index</p>
                       </div>
-                      <div className="px-8 py-4 rounded-2xl bg-black text-white flex flex-col items-center shadow-lg shadow-black/5">
-                        <p className="text-4xl font-bold tracking-tighter text-[#ccff00]">
+                      <div className="px-6 py-3 sm:px-8 sm:py-4 rounded-2xl bg-black text-white flex flex-col items-center shadow-lg shadow-black/5">
+                        <p className="text-3xl sm:text-4xl font-bold tracking-tighter text-[#ccff00]">
                           {assessment.overall_score.toFixed(0)}%
                         </p>
                         <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest mt-1">Overall</p>
                       </div>
                       <button 
                         onClick={() => setSelectedReport(assessment)}
-                        className="w-12 h-12 rounded-full border border-black/10 bg-white flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm"
+                        className="w-12 h-12 rounded-full border border-black/10 bg-white flex items-center justify-center text-black hover:bg-black hover:text-white transition-all shadow-sm shrink-0"
                       >
                          <ArrowRight className="w-5 h-5" />
                       </button>

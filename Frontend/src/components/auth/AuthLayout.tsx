@@ -1,5 +1,4 @@
-import React from "react";
-import { Sparkles, BrainCircuit, Star, Zap } from "lucide-react";
+import { Sparkles, Star, Zap } from "lucide-react";
 import { GlobalStyles } from "../ui/ControlledChaos";
 
 interface AuthLayoutProps {

@@ -21,7 +21,7 @@ import agent_3_validator
 import agent_2_evaluator
 import agent_1_interviewer
 import agent_4_assessor
-from main import _extract_jd_requirements, _extract_resume_skill_items
+from test_main_cli import _extract_jd_requirements, _extract_resume_skill_items
 from extractor import extract_resume, extract_skills
 from vector_store import (
     store_resume_chunks,

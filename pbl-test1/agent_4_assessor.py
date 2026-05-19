@@ -1,11 +1,13 @@
 import json
+import os
 import requests
 import random
 from models import ATSResult, MCQQuestion, DSAQuestion, AssessmentData
 from mcp_tools import call_tool
+from logger import logger
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "gemma3:4b"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL = os.getenv("OLLAMA_MODEL_ASSESSOR", "gemma3:4b")
 
 def _ollama_generate(prompt: str) -> str:
     payload = {
@@ -65,7 +67,7 @@ def generate_assessment(ats_result: ATSResult) -> AssessmentData:
     context = "\n".join([c["content"] for c in chunks])
     
     prompt = _build_assessment_prompt(ats_result, context)
-    print("[agent_4] Generating MCQ & DSA Assessment...")
+    logger.info("Generating MCQ & DSA Assessment...")
     raw = _ollama_generate(prompt)
     
     try:
@@ -79,7 +81,7 @@ def generate_assessment(ats_result: ATSResult) -> AssessmentData:
         
         return AssessmentData(mcqs=mcqs, dsa=dsa)
     except Exception as e:
-        print(f"[agent_4] Parsing failed: {e}. Using fallback assessment.")
+        logger.warning(f"Parsing failed: {e}. Using fallback assessment.")
         return AssessmentData(
             mcqs=[
                 MCQQuestion(id=1, question="What is the primary benefit of using a Vector Database in RAG?", 

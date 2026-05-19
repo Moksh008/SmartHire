@@ -5,9 +5,8 @@ import { auth } from "@/lib/firebase";
 import { Mail, Sparkles, Eye, EyeOff, Briefcase, User as UserIcon, MoveRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { BrutalButton } from "@/components/ui/ControlledChaos";
-import axios from "axios";
-
-const API_BASE = "http://127.0.0.1:8000/api";
+import api from "@/lib/api-client";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +17,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +25,13 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/auth/register`, {
+      const res = await api.post(`/auth/register`, {
         email,
         password,
         role
       });
       
-      localStorage.setItem("user", JSON.stringify(res.data));
+      login(res.data);
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -50,9 +50,8 @@ export default function Signup() {
       
       if (!email) throw new Error("No email returned from Google");
       
-      const res = await axios.post(`${API_BASE}/auth/google`, { email });
-      const userData = res.data;
-      localStorage.setItem("user", JSON.stringify(userData));
+      const res = await api.post(`/auth/google`, { email });
+      login(res.data);
       
       navigate("/dashboard");
     } catch (err: any) {

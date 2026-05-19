@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Eye, EyeOff, Mail, Sparkles, MoveRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { BrutalButton } from "@/components/ui/ControlledChaos";
-import axios from "axios";
-
-const API_BASE = "http://127.0.0.1:8000/api";
+import api from "@/lib/api-client";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +17,13 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roleType = searchParams.get("role");
+  const { login } = useAuth();
+
+  useEffect(() => {
+    if (searchParams.get("expired") === "true") {
+      setError("Your session has expired. Please log in again.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,14 +31,12 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, {
+      const res = await api.post(`/auth/login`, {
         email,
         password
       });
 
-      const userData = res.data;
-      localStorage.setItem("user", JSON.stringify(userData));
-
+      login(res.data);
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -51,10 +55,8 @@ export default function Login() {
 
       if (!email) throw new Error("No email returned from Google");
 
-      const res = await axios.post(`${API_BASE}/auth/google`, { email });
-      const userData = res.data;
-      localStorage.setItem("user", JSON.stringify(userData));
-
+      const res = await api.post(`/auth/google`, { email });
+      login(res.data);
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);

@@ -266,6 +266,7 @@ const InfoCardMedia = ({
         ...item,
         type: item.type || "image",
       })),
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     [media]
   );
 
@@ -290,7 +291,9 @@ const InfoCardMedia = ({
         setIsOverflowVisible(true);
       }, 100);
     } else {
-      setIsOverflowVisible(false);
+      timeoutId = setTimeout(() => {
+        setIsOverflowVisible(false);
+      }, 0);
     }
     return () => clearTimeout(timeoutId);
   }, [isHovered]);

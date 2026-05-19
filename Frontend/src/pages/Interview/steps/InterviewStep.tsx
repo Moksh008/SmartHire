@@ -27,26 +27,7 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
     ...(data.interview_questions?.scenario_based || []),
   ]
 
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    setTranscript("")
-    if (allQs.length > 0) {
-      if (ttsEnabled) {
-        speakText(allQs[currentQIdx])
-      } else {
-        startSTT()
-      }
-    }
-  }, [currentQIdx])
-
-  const speakText = (text: string) => {
+  function speakText(text: string) {
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
@@ -61,7 +42,7 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
     }
   }
 
-  const startSTT = () => {
+  function startSTT() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
       if (recognitionRef.current) {
@@ -102,6 +83,29 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
     }
   }
 
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const runStep = () => {
+      setTranscript("")
+      if (allQs.length > 0) {
+        if (ttsEnabled) {
+          speakText(allQs[currentQIdx])
+        } else {
+          startSTT()
+        }
+      }
+    };
+    const timeoutId = setTimeout(runStep, 0);
+    return () => clearTimeout(timeoutId);
+  }, [currentQIdx])
+
   const handleNext = () => {
     if (recognitionRef.current) {
       try { recognitionRef.current.stop() } catch(e) {}
@@ -128,15 +132,15 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
   }
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-5 gap-8 min-h-[calc(100svh-14rem)]">
+    <div className="flex flex-col lg:grid lg:grid-cols-5 gap-6 lg:gap-8 min-h-[calc(100svh-14rem)]">
       {/* Left: Monitoring & Vocal */}
       <div className="lg:col-span-2 space-y-6 flex flex-col">
-        <div className="border-4 border-black shadow-[8px_8px_0px_black] overflow-hidden aspect-video bg-black shrink-0">
+        <div className="border-4 border-black shadow-[4px_4px_0px_black] sm:shadow-[8px_8px_0px_black] overflow-hidden aspect-video bg-black shrink-0">
           <ProctorStream sessionId={sessionId} />
         </div>
         
         {/* Live Transcript Area */}
-        <div className="h-32 p-6 border-4 border-black bg-black text-[#ccff00] shadow-[8px_8px_0px_black] overflow-y-auto font-mono text-[10px] italic shrink-0">
+        <div className="h-32 p-4 border-4 border-black bg-black text-[#ccff00] shadow-[4px_4px_0px_black] sm:shadow-[8px_8px_0px_black] overflow-y-auto font-mono text-[10px] italic shrink-0">
           <div className="flex items-center gap-2 mb-3 border-b border-[#ccff00]/20 pb-1">
             <div className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
             <span className="uppercase tracking-widest font-black text-[8px]">LIVE_TRANSCRIPTION_STREAM</span>
@@ -145,8 +149,8 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
             {transcript || "WAITING_FOR_SONIC_INPUT..."}
           </p>
         </div>
-
-        <div className="p-6 border-4 border-black bg-white shadow-[8px_8px_0px_black] space-y-4 shrink-0">
+ 
+        <div className="p-4 sm:p-6 border-4 border-black bg-white shadow-[4px_4px_0px_black] sm:shadow-[8px_8px_0px_black] space-y-4 shrink-0">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-black text-black uppercase tracking-tighter italic flex items-center gap-2">
               <Mic className="w-4 h-4" />
@@ -183,7 +187,7 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
               )}
             </button>
             <button 
-              className="h-14 w-14 border-2 border-black bg-white flex items-center justify-center shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+              className="h-14 w-14 border-2 border-black bg-white flex items-center justify-center shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all shrink-0"
               onClick={() => speakText(allQs[currentQIdx])}
               disabled={isSpeaking}
             >
@@ -195,35 +199,35 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
       </div>
 
       {/* Right: Question Area */}
-      <div className="lg:col-span-3 flex flex-col border-4 border-black bg-white shadow-[12px_12px_0px_black] overflow-hidden min-h-[500px]">
-        <div className="p-8 border-b-4 border-black bg-[#ccff00]/10 flex items-center justify-between shrink-0">
+      <div className="lg:col-span-3 flex flex-col border-4 border-black bg-white shadow-[6px_6px_0px_black] sm:shadow-[12px_12px_0px_black] overflow-hidden min-h-[400px] sm:min-h-[500px]">
+        <div className="p-4 sm:p-8 border-b-4 border-black bg-[#ccff00]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 border-2 border-black bg-black text-[#ccff00] flex items-center justify-center shadow-[4px_4px_0px_black]">
-              <BrainCircuit className="w-8 h-8" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 border-2 border-black bg-black text-[#ccff00] flex items-center justify-center shadow-[4px_4px_0px_black] shrink-0">
+              <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
             <div>
-              <h3 className="text-2xl font-black text-black uppercase tracking-tighter italic">AI_AGENT_UNIT</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-black uppercase tracking-tighter italic">AI_AGENT_UNIT</h3>
               <p className="text-[9px] text-black font-black uppercase tracking-widest mt-1 opacity-40 italic underline decoration-black decoration-2">Session_Packet_{currentQIdx + 1}_of_{allQs.length}</p>
             </div>
           </div>
-          <div className="w-32 h-4 bg-black/10 border-2 border-black shadow-inner overflow-hidden">
+          <div className="w-full sm:w-32 h-3.5 bg-black/10 border-2 border-black shadow-inner overflow-hidden">
              <div className="h-full bg-black transition-all duration-500" style={{ width: `${((currentQIdx + 1) / allQs.length) * 100}%` }} />
           </div>
         </div>
 
-        <div className="flex-1 p-10 flex flex-col justify-center items-center text-center space-y-8 overflow-y-auto bg-white">
+        <div className="flex-1 p-4 sm:p-10 flex flex-col justify-center items-center text-center space-y-6 sm:space-y-8 overflow-y-auto bg-white min-h-[220px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentQIdx}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="space-y-6 max-w-2xl"
+              className="space-y-4 sm:space-y-6 max-w-2xl"
             >
-              <h2 className="text-3xl font-black text-black leading-tight uppercase tracking-tighter italic">
+              <h2 className="text-xl sm:text-3xl font-black text-black leading-tight uppercase tracking-tighter italic break-words">
                 {allQs[currentQIdx]}
               </h2>
-              <div className="w-24 h-1.5 bg-black/20 mx-auto border border-black shadow-sm" />
+              <div className="w-20 sm:w-24 h-1 sm:h-1.5 bg-black/20 mx-auto border border-black shadow-sm" />
             </motion.div>
           </AnimatePresence>
 
@@ -231,14 +235,14 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
             <motion.div 
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }}
-              className="w-full max-w-xl p-6 border-2 border-black bg-[#fffbf0] shadow-[6px_6px_0px_black] italic text-black font-bold uppercase text-base"
+              className="w-full max-w-xl p-4 sm:p-6 border-2 border-black bg-[#fffbf0] shadow-[4px_4px_0px_black] sm:shadow-[6px_6px_0px_black] italic text-black font-bold uppercase text-sm sm:text-base"
             >
               "{input || transcript}"
             </motion.div>
           )}
         </div>
 
-        <div className="p-8 bg-[#fffbf0] border-t-4 border-black space-y-4 shrink-0">
+        <div className="p-4 sm:p-8 bg-[#fffbf0] border-t-4 border-black space-y-4 shrink-0">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Input 
@@ -248,7 +252,7 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
                   setInput(e.target.value)
                   if(e.target.value) setIsAnswering(true)
                 }}
-                className="h-16 border-2 border-black bg-white rounded-none font-black uppercase tracking-tighter text-xl px-6 focus-visible:ring-0 focus-visible:border-[#ccff00] shadow-[4px_4px_0px_black]"
+                className="h-14 sm:h-16 border-2 border-black bg-white rounded-none font-black uppercase tracking-tighter text-lg sm:text-xl px-4 sm:px-6 focus-visible:ring-0 focus-visible:border-[#ccff00] shadow-[4px_4px_0px_black]"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (input.trim() || transcript.trim())) {
                     handleNext()
@@ -257,19 +261,19 @@ export function InterviewStep({ sessionId, data, onComplete }: InterviewStepProp
               />
             </div>
             <button 
-              className={`h-16 px-10 font-black uppercase tracking-tighter italic border-2 border-black transition-all flex items-center justify-center gap-3 ${
+              className={`h-14 sm:h-16 px-6 sm:px-10 font-black uppercase tracking-tighter italic border-2 border-black transition-all flex items-center justify-center gap-3 ${
                 (input.trim() || transcript.trim()) 
-                  ? "bg-black text-[#ccff00] shadow-[8px_8px_0px_#ccff00] hover:-translate-y-1 active:translate-y-1 active:shadow-none" 
+                  ? "bg-black text-[#ccff00] shadow-[4px_4px_0px_#ccff00] sm:shadow-[8px_8px_0px_#ccff00] hover:-translate-y-1 active:translate-y-1 active:shadow-none" 
                   : "bg-black/5 text-black/20 cursor-not-allowed"
               }`}
               onClick={handleNext}
               disabled={!(input.trim() || transcript.trim())}
             >
               COMMIT_RESPONSE
-              <ArrowRight className="w-6 h-6" />
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
-          <p className="text-[9px] text-center text-black font-black uppercase tracking-widest italic opacity-40">
+          <p className="text-[8px] text-center text-black font-black uppercase tracking-widest italic opacity-40">
             SYSTEM_ADVICE: VOCAL_ENCODING_ENHANCES_SENTIMENT_ANALYSIS
           </p>
         </div>

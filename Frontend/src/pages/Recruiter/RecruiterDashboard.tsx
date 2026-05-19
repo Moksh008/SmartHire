@@ -222,8 +222,8 @@ export default function RecruiterDashboard() {
           </div>
         </header>
 
-        <main className="p-8 md:p-12 lg:p-16 w-full max-w-[1600px] mx-auto min-h-[calc(100svh-5rem)]">
-          <div className="grid lg:grid-cols-4 gap-12">
+        <main className="p-4 sm:p-8 md:p-12 lg:p-16 w-full max-w-[1600px] mx-auto min-h-[calc(100svh-5rem)]">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-12">
             {/* Jobs List Sidebar */}
             <div className="lg:col-span-1 space-y-8">
               <div className="flex items-center justify-between">
@@ -331,11 +331,11 @@ export default function RecruiterDashboard() {
                             setSelectedCandidate(candidate)
                             setShowCandidateModal(true)
                           }}
-                          className="p-8 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group"
+                          className="p-5 sm:p-8 bg-white rounded-3xl border border-black/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group"
                         >
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                            <div className="flex items-center gap-8">
-                              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg transition-transform group-hover:rotate-6 ${
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8">
+                              <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-xl sm:text-2xl shadow-lg transition-transform group-hover:rotate-6 ${
                                 idx === 0 ? "bg-[#ccff00] text-black shadow-[#ccff00]/20" :
                                 idx === 1 ? "bg-slate-100 text-black shadow-slate-200/20" :
                                 idx === 2 ? "bg-[#ff5e00] text-white shadow-[#ff5e00]/20" :
@@ -344,8 +344,8 @@ export default function RecruiterDashboard() {
                                 {idx + 1}
                               </div>
                               <div className="space-y-1">
-                                <h4 className="font-bold text-black text-2xl tracking-tight group-hover:text-[#ff5e00] transition-colors">{candidate.candidate_email}</h4>
-                                <div className="flex items-center gap-4">
+                                <h4 className="font-bold text-black text-xl sm:text-2xl tracking-tight group-hover:text-[#ff5e00] transition-colors break-all">{candidate.candidate_email}</h4>
+                                <div className="flex flex-wrap items-center gap-3">
                                   <div className="bg-black/5 text-black/60 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest">{candidate.file_name}</div>
                                   <div className="text-[10px] font-bold uppercase text-[#ff5e00] flex items-center gap-1.5">
                                     <Zap className="w-3 h-3 fill-current" />
@@ -355,12 +355,12 @@ export default function RecruiterDashboard() {
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-10">
+                            <div className="flex items-center justify-between md:justify-end gap-6 sm:gap-10 border-t border-black/5 md:border-none pt-4 md:pt-0">
                                <div className="text-left">
-                                  <div className="text-5xl font-bold text-black leading-none tracking-tighter group-hover:scale-110 transition-transform">{candidate.ats_score.toFixed(0)}%</div>
+                                  <div className="text-3xl sm:text-5xl font-bold text-black leading-none tracking-tighter group-hover:scale-110 transition-transform">{candidate.ats_score.toFixed(0)}%</div>
                                   <div className="text-[10px] font-bold text-black/40 uppercase tracking-widest mt-2">Match Index</div>
                                 </div>
-                                <div className="h-12 w-12 rounded-full border border-black/10 bg-white group-hover:bg-black group-hover:text-[#ccff00] flex items-center justify-center transition-all shadow-sm">
+                                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border border-black/10 bg-white group-hover:bg-black group-hover:text-[#ccff00] flex items-center justify-center transition-all shadow-sm">
                                    <ArrowUpRight className="w-5 h-5" />
                                 </div>
                             </div>
@@ -433,21 +433,21 @@ export default function RecruiterDashboard() {
             {showCandidateModal && selectedCandidate && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCandidateModal(false)} />
-                <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-[#fffbf0] rounded-[3rem] p-10 w-full max-w-4xl shadow-2xl border border-black/5 max-h-[90vh] overflow-y-auto">
-                  <div className="flex items-start justify-between mb-10 pb-8 border-b border-black/5">
-                    <div className="flex items-center gap-8">
-                       <div className="w-20 h-20 rounded-[2rem] bg-black text-[#ccff00] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-black/20">
+                <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-[#fffbf0] rounded-[1.5rem] sm:rounded-[3rem] p-4 sm:p-10 w-full max-w-4xl shadow-2xl border border-black/5 max-h-[90vh] overflow-y-auto">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10 pb-8 border-b border-black/5">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
+                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] bg-black text-[#ccff00] flex items-center justify-center text-3xl sm:text-4xl font-bold shadow-2xl shadow-black/20 shrink-0">
                           {selectedCandidate.candidate_email.charAt(0).toUpperCase()}
                        </div>
-                       <div>
-                          <h3 className="text-3xl font-bold text-black tracking-tight">{selectedCandidate.candidate_email}</h3>
-                          <p className="text-[10px] font-bold uppercase text-black/30 mt-2 tracking-widest flex items-center gap-2">
+                       <div className="text-center sm:text-left min-w-0 w-full">
+                          <h3 className="text-2xl sm:text-3xl font-bold text-black tracking-tight break-all">{selectedCandidate.candidate_email}</h3>
+                          <p className="text-[10px] font-bold uppercase text-black/30 mt-2 tracking-widest flex items-center justify-center sm:justify-start gap-2">
                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                              Processed Data Packet // {new Date(selectedCandidate.uploaded_at).toLocaleDateString()}
                           </p>
                        </div>
                     </div>
-                    <button className="h-10 w-10 rounded-full hover:bg-black/5 flex items-center justify-center transition-colors" onClick={() => setShowCandidateModal(false)}>
+                    <button className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 h-10 w-10 rounded-full hover:bg-black/5 flex items-center justify-center transition-colors shrink-0" onClick={() => setShowCandidateModal(false)}>
                       <X className="w-5 h-5" />
                     </button>
                   </div>
@@ -560,12 +560,12 @@ export default function RecruiterDashboard() {
                   )}
 
                   <div className="mt-12 pt-12 border-t border-black/5">
-                     <div className="flex gap-4">
-                        <button className="flex-1 h-16 bg-black text-[#ccff00] font-bold rounded-2xl shadow-xl shadow-black/10 hover:shadow-2xl transition-all flex items-center justify-center gap-3">
+                     <div className="flex flex-col sm:flex-row gap-4">
+                        <button className="w-full sm:flex-1 h-16 bg-black text-[#ccff00] font-bold rounded-2xl shadow-xl shadow-black/10 hover:shadow-2xl transition-all flex items-center justify-center gap-3">
                            <CheckCircle2 className="w-5 h-5" />
                            Authorize Interview
                         </button>
-                        <button className="flex-1 h-16 bg-white text-black font-bold rounded-2xl border border-black/10 hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3">
+                        <button className="w-full sm:flex-1 h-16 bg-white text-black font-bold rounded-2xl border border-black/10 hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3">
                            Download Full Intel Report
                         </button>
                      </div>

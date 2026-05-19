@@ -5,14 +5,16 @@ Takes the ATSResult + resume context and produces human-readable feedback.
 """
 
 import json
+import os
 import requests
 from typing import List
 
 from models import ATSResult, EvaluationResult
 from mcp_tools import call_tool
+from logger import logger
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "qwen2.5-coder:7b"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
 
 def _ollama_generate(prompt: str) -> str:
@@ -80,7 +82,7 @@ def run(ats_result: ATSResult) -> EvaluationResult:
 
     prompt = _build_prompt(ats_result, resume_context)
 
-    print(f"[agent_2] Calling {MODEL} via Ollama...")
+    logger.info(f"Calling {MODEL} via Ollama...")
     raw_response = _ollama_generate(prompt)
 
     try:
@@ -102,7 +104,7 @@ def run(ats_result: ATSResult) -> EvaluationResult:
         gaps = data.get("gaps", []) or [m.requirement for m in ats_result.missing_skills[:3]]
         probes = data.get("will_be_probed", []) or [f"Probe expertise in {g}" for g in gaps[:2]]
 
-        print(f"[agent_2] Done — fit: {fit}, strengths: {len(strengths)}, gaps: {len(gaps)}")
+        logger.info(f"Done — fit: {fit}, strengths: {len(strengths)}, gaps: {len(gaps)}")
 
         return EvaluationResult(
             qualitative_feedback=data.get("qualitative_feedback", ""),
@@ -113,7 +115,7 @@ def run(ats_result: ATSResult) -> EvaluationResult:
         )
 
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"[agent_2] Parse failed ({e}), using ATS-based fallback")
+        logger.warning(f"Parse failed ({e}), using ATS-based fallback")
         fit = "strong" if ats_result.ats_score >= 65 else (
             "moderate" if ats_result.ats_score >= 35 else "weak"
         )

@@ -99,22 +99,22 @@ export function WorkspaceStep({ onComplete }: WorkspaceStepProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
-            className="p-10 border-4 border-black bg-white shadow-[12px_12px_0px_black] relative overflow-hidden"
+            className="p-4 sm:p-10 border-4 border-black bg-white shadow-[6px_6px_0px_black] sm:shadow-[12px_12px_0px_black] relative overflow-hidden"
           >
-            <div className="space-y-10">
+            <div className="space-y-6 sm:space-y-10">
               <div className="space-y-4">
                 <label className="text-xs font-black text-black uppercase tracking-widest flex items-center gap-2 italic">
                    <div className="w-2 h-2 bg-black rounded-full" />
                    RESUME_UPLOAD_PORT (PDF)
                 </label>
-                <div className="border-4 border-dashed border-black bg-[#fffbf0] p-12 text-center hover:bg-[#ccff00]/10 transition-all cursor-pointer group shadow-inner">
+                <div className="border-4 border-dashed border-black bg-[#fffbf0] p-6 sm:p-12 text-center hover:bg-[#ccff00]/10 transition-all cursor-pointer group shadow-inner">
                   <input type="file" className="hidden" id="resume-upload" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                  <label htmlFor="resume-upload" className="cursor-pointer space-y-6 block">
-                    <div className="w-20 h-20 bg-white border-2 border-black text-black flex items-center justify-center mx-auto group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-[4px_4px_0px_black]">
-                      <FileText className="w-10 h-10" />
+                  <label htmlFor="resume-upload" className="cursor-pointer space-y-4 sm:space-y-6 block">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border-2 border-black text-black flex items-center justify-center mx-auto group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-[4px_4px_0px_black]">
+                      <FileText className="w-8 h-8 sm:w-10 sm:h-10" />
                     </div>
                     <div>
-                      <p className="text-2xl font-black text-black uppercase tracking-tighter">{file ? file.name : "INPUT_FILE_HERE"}</p>
+                      <p className="text-xl sm:text-2xl font-black text-black uppercase tracking-tighter break-all">{file ? file.name : "INPUT_FILE_HERE"}</p>
                       <p className="text-[10px] text-black font-black uppercase tracking-widest mt-2 italic opacity-40">SYSTEM_LIMIT: 10MB_MAX</p>
                     </div>
                   </label>
@@ -143,18 +143,18 @@ export function WorkspaceStep({ onComplete }: WorkspaceStepProps) {
                 </label>
                 <textarea 
                   placeholder="PASTE_REQUIREMENTS_ARRAY..."
-                  className="w-full h-48 p-6 bg-white border-2 border-black rounded-none outline-none font-black uppercase tracking-tighter text-lg focus:border-[#ccff00] transition-all shadow-[4px_4px_0px_black] resize-none"
+                  className="w-full h-48 p-4 sm:p-6 bg-white border-2 border-black rounded-none outline-none font-black uppercase tracking-tighter text-base sm:text-lg focus:border-[#ccff00] transition-all shadow-[4px_4px_0px_black] resize-none"
                   value={jd}
                   onChange={(e) => setJd(e.target.value)}
                 />
               </div>
-
+ 
               <button 
-                className="w-full bg-black hover:bg-[#111] text-[#ccff00] font-black py-8 border-2 border-black shadow-[8px_8px_0px_#ccff00] active:shadow-none active:translate-x-2 active:translate-y-2 transition-all gap-4 text-2xl uppercase tracking-tighter flex items-center justify-center italic"
+                className="w-full bg-black hover:bg-[#111] text-[#ccff00] font-black py-5 sm:py-8 border-2 border-black shadow-[4px_4px_0px_#ccff00] sm:shadow-[8px_8px_0px_#ccff00] active:shadow-none active:translate-x-2 active:translate-y-2 transition-all gap-4 text-xl sm:text-2xl uppercase tracking-tighter flex items-center justify-center italic"
                 onClick={handleRun}
                 disabled={!file || !jd}
               >
-                <ArrowRight className="w-8 h-8" />
+                <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8" />
                 INITIATE_ASSESSMENT_SEQUENCE
               </button>
             </div>
@@ -164,31 +164,31 @@ export function WorkspaceStep({ onComplete }: WorkspaceStepProps) {
             key="terminal"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-10 border-4 border-black bg-black text-[#ccff00] shadow-[12px_12px_0px_#ff5e00] relative overflow-hidden h-[600px] flex flex-col justify-between"
+            className="p-4 sm:p-10 border-4 border-black bg-black text-[#ccff00] shadow-[6px_6px_0px_#ff5e00] sm:shadow-[12px_12px_0px_#ff5e00] relative overflow-hidden min-h-[500px] sm:h-[600px] flex flex-col justify-between"
           >
-            <div className="space-y-8">
-              <div className="flex justify-between items-start border-b-4 border-[#ccff00]/20 pb-6">
+            <div className="space-y-6 sm:space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b-4 border-[#ccff00]/20 pb-4 sm:pb-6">
                 <div>
-                  <h2 className="text-3xl font-black uppercase tracking-tighter italic flex items-center gap-4">
-                    <Cpu className="w-8 h-8 animate-pulse" />
+                  <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tighter italic flex items-center gap-2 sm:gap-4">
+                    <Cpu className="w-6 h-6 sm:w-8 sm:h-8 animate-pulse shrink-0" />
                     AI_AGENTS_BOOTING
                   </h2>
-                  <p className="font-mono text-sm opacity-60 mt-2 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Deep Inference Models typically take 2-5 minutes to align.
+                  <p className="font-mono text-xs sm:text-sm opacity-60 mt-1 sm:mt-2 flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Deep Inference Models typically take 2-5 minutes to align.
                   </p>
                 </div>
-                <div className="px-4 py-2 border-2 border-[#ccff00] bg-[#ccff00]/10 font-black italic">
+                <div className="px-3 py-1.5 sm:px-4 sm:py-2 border-2 border-[#ccff00] bg-[#ccff00]/10 font-black italic self-start sm:self-auto text-xs sm:text-sm">
                   {progress.toFixed(1)}%
                 </div>
               </div>
-
+ 
               <div className="space-y-2">
-                <p className="font-black uppercase tracking-widest text-xs opacity-50 italic">CURRENT_MAIN_TASK</p>
+                <p className="font-black uppercase tracking-widest text-[9px] sm:text-xs opacity-50 italic">CURRENT_MAIN_TASK</p>
                 <motion.p 
                   key={mainTask} 
                   initial={{ opacity: 0, x: -10 }} 
                   animate={{ opacity: 1, x: 0 }} 
-                  className="text-2xl font-black uppercase italic bg-[#ccff00] text-black px-4 py-2 inline-block shadow-[4px_4px_0px_#ff5e00]"
+                  className="text-base sm:text-2xl font-black uppercase italic bg-[#ccff00] text-black px-3 py-1.5 sm:px-4 sm:py-2 inline-block shadow-[4px_4px_0px_#ff5e00]"
                 >
                   {mainTask}
                 </motion.p>

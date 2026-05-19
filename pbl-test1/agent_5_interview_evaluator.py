@@ -4,12 +4,14 @@ Generates qualitative feedback based on candidate's answers to the interview que
 """
 
 import json
+import os
 import requests
 import re
 from typing import List
+from logger import logger
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "qwen2.5-coder:7b"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
 def _analyze_filler_words(answers: List[dict]) -> dict:
     fillers = ["um", "ah", "uh", "like", "you know", "actually", "basically"]
@@ -87,7 +89,7 @@ def run(answers: List[dict]) -> dict:
         }
 
     prompt = _build_prompt(answers)
-    print(f"[agent_5] Evaluating interview answers via {MODEL}...")
+    logger.info(f"Evaluating interview answers via {MODEL}...")
     
     try:
         raw = _ollama_generate(prompt)
@@ -106,7 +108,7 @@ def run(answers: List[dict]) -> dict:
         return data
 
     except Exception as e:
-        print(f"[agent_5] Parse failed ({e}), using fallback")
+        logger.warning(f"Parse failed ({e}), using fallback evaluation")
         return {
             "overall_impression": "The candidate provided answers, but the detailed evaluation could not be completed.",
             "strengths": ["Communicated during the interview"],

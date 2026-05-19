@@ -17,6 +17,7 @@ export const Pupil = ({
 }: PupilProps) => {
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
+  const [pupilPosition, setPupilPosition] = useState({ x: 0, y: 0 });
   const pupilRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,29 +33,32 @@ export const Pupil = ({
     };
   }, []);
 
-  const calculatePupilPosition = () => {
-    if (!pupilRef.current) return { x: 0, y: 0 };
+  useEffect(() => {
+    const updatePosition = () => {
+      if (forceLookX !== undefined && forceLookY !== undefined) {
+        setPupilPosition({ x: forceLookX, y: forceLookY });
+        return;
+      }
+      if (!pupilRef.current) return;
 
-    if (forceLookX !== undefined && forceLookY !== undefined) {
-      return { x: forceLookX, y: forceLookY };
-    }
+      const pupil = pupilRef.current.getBoundingClientRect();
+      const pupilCenterX = pupil.left + pupil.width / 2;
+      const pupilCenterY = pupil.top + pupil.height / 2;
 
-    const pupil = pupilRef.current.getBoundingClientRect();
-    const pupilCenterX = pupil.left + pupil.width / 2;
-    const pupilCenterY = pupil.top + pupil.height / 2;
+      const deltaX = mouseX - pupilCenterX;
+      const deltaY = mouseY - pupilCenterY;
+      const distance = Math.min(Math.sqrt(deltaX ** 2 + deltaY ** 2), maxDistance);
 
-    const deltaX = mouseX - pupilCenterX;
-    const deltaY = mouseY - pupilCenterY;
-    const distance = Math.min(Math.sqrt(deltaX ** 2 + deltaY ** 2), maxDistance);
+      const angle = Math.atan2(deltaY, deltaX);
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
 
-    const angle = Math.atan2(deltaY, deltaX);
-    const x = Math.cos(angle) * distance;
-    const y = Math.sin(angle) * distance;
+      setPupilPosition({ x, y });
+    };
 
-    return { x, y };
-  };
-
-  const pupilPosition = calculatePupilPosition();
+    const timeoutId = setTimeout(updatePosition, 0);
+    return () => clearTimeout(timeoutId);
+  }, [mouseX, mouseY, forceLookX, forceLookY, maxDistance]);
 
   return (
     <div
@@ -94,6 +98,7 @@ export const EyeBall = ({
 }: EyeBallProps) => {
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
+  const [pupilPosition, setPupilPosition] = useState({ x: 0, y: 0 });
   const eyeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,29 +114,32 @@ export const EyeBall = ({
     };
   }, []);
 
-  const calculatePupilPosition = () => {
-    if (!eyeRef.current) return { x: 0, y: 0 };
+  useEffect(() => {
+    const updatePosition = () => {
+      if (forceLookX !== undefined && forceLookY !== undefined) {
+        setPupilPosition({ x: forceLookX, y: forceLookY });
+        return;
+      }
+      if (!eyeRef.current) return;
 
-    if (forceLookX !== undefined && forceLookY !== undefined) {
-      return { x: forceLookX, y: forceLookY };
-    }
+      const eye = eyeRef.current.getBoundingClientRect();
+      const eyeCenterX = eye.left + eye.width / 2;
+      const eyeCenterY = eye.top + eye.height / 2;
 
-    const eye = eyeRef.current.getBoundingClientRect();
-    const eyeCenterX = eye.left + eye.width / 2;
-    const eyeCenterY = eye.top + eye.height / 2;
+      const deltaX = mouseX - eyeCenterX;
+      const deltaY = mouseY - eyeCenterY;
+      const distance = Math.min(Math.sqrt(deltaX ** 2 + deltaY ** 2), maxDistance);
 
-    const deltaX = mouseX - eyeCenterX;
-    const deltaY = mouseY - eyeCenterY;
-    const distance = Math.min(Math.sqrt(deltaX ** 2 + deltaY ** 2), maxDistance);
+      const angle = Math.atan2(deltaY, deltaX);
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
 
-    const angle = Math.atan2(deltaY, deltaX);
-    const x = Math.cos(angle) * distance;
-    const y = Math.sin(angle) * distance;
+      setPupilPosition({ x, y });
+    };
 
-    return { x, y };
-  };
-
-  const pupilPosition = calculatePupilPosition();
+    const timeoutId = setTimeout(updatePosition, 0);
+    return () => clearTimeout(timeoutId);
+  }, [mouseX, mouseY, forceLookX, forceLookY, maxDistance]);
 
   return (
     <div

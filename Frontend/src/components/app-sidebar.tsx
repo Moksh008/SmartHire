@@ -7,11 +7,7 @@ import {
   LayoutGrid,
   Settings,
   Users,
-  Upload,
-  BrainCircuit,
   LogOut,
-  ChevronRight,
-  Zap,
   Briefcase,
   User,
   Target,
@@ -28,7 +24,8 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/sidebar"
-import { cn } from "@/lib/utils"
+import { useAuth } from "@/context/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 const recruiterNavItems = [
   {
@@ -94,23 +91,17 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ role: propsRole, ...props }: AppSidebarProps) {
   const { state } = useSidebar()
+  const { role: authRole, logout } = useAuth()
+  const navigate = useNavigate()
   
-  // Detect role from localStorage if not provided via props
-  const userRole = React.useMemo(() => {
-    if (propsRole) return propsRole
-    const userStr = localStorage.getItem("user")
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr)
-        return user.role as "RECRUITER" | "INDIVIDUAL"
-      } catch (e) {
-        return "RECRUITER"
-      }
-    }
-    return "RECRUITER"
-  }, [propsRole])
+  const userRole = propsRole || authRole || "RECRUITER"
 
   const navItems = userRole === "RECRUITER" ? recruiterNavItems : individualNavItems
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
+  }
 
   return (
     <Sidebar variant="sidebar" className="border-5 bg-[#0f172a] rounded-r-[2rem] shadow-2xl selection:bg-[#ccff00]" {...props}>
@@ -171,7 +162,10 @@ export function AppSidebar({ role: propsRole, ...props }: AppSidebarProps) {
       <SidebarFooter className="p-4 bg-transparent">
         <SidebarMenu>
           <SidebarMenuItem>
-             <SidebarMenuButton className="w-full h-12 justify-start gap-4 rounded-xl hover:bg-white/10 text-rose-500 transition-all">
+             <SidebarMenuButton 
+               onClick={handleLogout}
+               className="w-full h-12 justify-start gap-4 rounded-xl hover:bg-white/10 text-rose-500 transition-all cursor-pointer"
+             >
                <LogOut className="w-5 h-5" />
                <span className="font-semibold text-sm">Logout</span>
              </SidebarMenuButton>
