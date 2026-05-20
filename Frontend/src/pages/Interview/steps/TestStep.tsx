@@ -12,11 +12,12 @@ import { API_BASE } from "@/config/api"
 interface TestStepProps {
   sessionId: string;
   data: any;
+  resumeId: number;
   interviewAnswers: any[];
   onComplete: () => void;
 }
 
-export function TestStep({ sessionId, data, interviewAnswers, onComplete }: TestStepProps) {
+export function TestStep({ sessionId, data, resumeId, interviewAnswers, onComplete }: TestStepProps) {
   const [answers, setAnswers] = useState<Record<number, string>>({} as Record<number, string>)
   const [codeSolution, setCodeSolution] = useState("")
   const [language, setLanguage] = useState("python")
@@ -88,7 +89,7 @@ export function TestStep({ sessionId, data, interviewAnswers, onComplete }: Test
       await axios.post(`${API_BASE}/individual/submit-assessment`, {
         session_id: sessionId,
         interview_answers: interviewAnswers || [],
-        resume_id: 1, 
+        resume_id: resumeId, 
         user_id: user ? user.id : 2,   
         mcq_score: mcqScore,
         dsa_code: codeSolution,

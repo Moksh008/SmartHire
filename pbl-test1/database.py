@@ -260,7 +260,11 @@ def create_resume(candidate_email: str, file_path: str, file_name: str, jd_id: O
         if missing_skills is None:
             missing_skills = analysis_data.get("ats_result", {}).get("missing_skills", [])
 
+        candidate = db.query(User).filter(User.email == candidate_email).first()
+        candidate_id = candidate.id if candidate else None
+
         resume = Resume(
+            candidate_id=candidate_id,
             candidate_email=candidate_email,
             file_path=file_path,
             file_name=file_name,

@@ -17,12 +17,14 @@ export default function AssessmentSuite() {
   const [step, setStep] = useState<Step>("workspace")
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [assessmentData, setAssessmentData] = useState<any>(null)
+  const [resumeId, setResumeId] = useState<number | null>(null)
   const [interviewAnswers, setInterviewAnswers] = useState<any[]>([])
 
   // --- HANDLERS ---
-  const handleScreeningComplete = (data: any, sid: string) => {
+  const handleScreeningComplete = (data: any, sid: string, rId: number) => {
     setAssessmentData(data)
     setSessionId(sid)
+    setResumeId(rId)
     setStep("setup")
   }
 
@@ -41,7 +43,7 @@ export default function AssessmentSuite() {
       case "interview": 
         return <InterviewStep sessionId={sessionId!} data={assessmentData} onComplete={handleInterviewComplete} />
       case "test": 
-        return <TestStep sessionId={sessionId!} data={assessmentData} interviewAnswers={interviewAnswers} onComplete={() => setStep("report")} />
+        return <TestStep sessionId={sessionId!} data={assessmentData} resumeId={resumeId!} interviewAnswers={interviewAnswers} onComplete={() => setStep("report")} />
       case "report": 
         return <ReportStep sessionId={sessionId!} onReset={() => setStep("workspace")} />
       default: 

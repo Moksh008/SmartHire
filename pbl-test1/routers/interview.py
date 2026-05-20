@@ -76,7 +76,7 @@ async def screen(
         user = db_session.query(User).filter(User.email == candidate_email).first()
         db_session.close()
         
-        create_resume(
+        resume_obj = create_resume(
             candidate_email=candidate_email,
             file_path=tmp_path,
             file_name=resume.filename,
@@ -85,7 +85,7 @@ async def screen(
         )
         
         logger.info(f"Screening completed. Session created: {session_id}")
-        return {"session_id": session_id, "data": data}
+        return {"session_id": session_id, "data": data, "resume_id": resume_obj.id}
     except Exception as e:
         logger.error(f"Screening failed: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))

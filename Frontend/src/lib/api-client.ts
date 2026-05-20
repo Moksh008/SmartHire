@@ -6,6 +6,7 @@ export const api = axios.create({
   timeout: 60000, // 60 seconds (handy for long AI screenings)
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   },
 });
 

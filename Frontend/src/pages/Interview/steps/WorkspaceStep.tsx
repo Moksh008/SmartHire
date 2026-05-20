@@ -6,7 +6,7 @@ import axios from "axios"
 import { API_BASE } from "@/config/api"
 
 interface WorkspaceStepProps {
-  onComplete: (data: any, sid: string) => void;
+  onComplete: (data: any, sid: string, resumeId: number) => void;
 }
 
 export function WorkspaceStep({ onComplete }: WorkspaceStepProps) {
@@ -65,14 +65,19 @@ export function WorkspaceStep({ onComplete }: WorkspaceStepProps) {
     setLogs([])
     
     try {
+      const userStr = localStorage.getItem("user")
+      const user = userStr ? JSON.parse(userStr) : null
+      const email = user ? user.email : "candidate@demo.ai"
+
       const formData = new FormData()
       formData.append("resume", file)
       formData.append("jd_text", jd)
       formData.append("job_title", title || "Target Role")
+      formData.append("candidate_email", email)
       
       const res = await axios.post(`${API_BASE}/screen`, formData)
       setProgress(100)
-      setTimeout(() => onComplete(res.data.data, res.data.session_id), 1000)
+      setTimeout(() => onComplete(res.data.data, res.data.session_id, res.data.resume_id), 1000)
     } catch (err) {
       console.error(err)
       alert("Backend Error: Ensure FastAPI server is running on localhost:8000")
