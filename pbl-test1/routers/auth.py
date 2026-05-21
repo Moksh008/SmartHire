@@ -21,6 +21,7 @@ class GoogleAuthRequest(BaseModel):
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
+    email: Optional[str] = None
     bio: Optional[str] = None
     location: Optional[str] = None
     avatar_url: Optional[str] = None
@@ -63,6 +64,7 @@ def update_profile_endpoint(req: UserUpdate, user_id: int):
         raise HTTPException(status_code=404, detail="User not found")
     return {"status": "success", "user": {
         "full_name": user.full_name,
+        "email": user.email,
         "bio": user.bio,
         "location": user.location,
         "avatar_url": user.avatar_url,

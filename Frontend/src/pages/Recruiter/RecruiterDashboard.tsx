@@ -82,6 +82,11 @@ export default function RecruiterDashboard() {
   const [showCandidateModal, setShowCandidateModal] = useState(false)
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null)
 
+  const [resumeText, setResumeText] = useState<string | null>(null)
+  const [resumeLoading, setResumeLoading] = useState(false)
+  const [showResume, setShowResume] = useState(false)
+  const [resumeDownloadUrl, setResumeDownloadUrl] = useState<string | null>(null)
+
   const [newJobTitle, setNewJobTitle] = useState("")
   const [newJobText, setNewJobText] = useState("")
   const [newJobRequirements, setNewJobRequirements] = useState("")
@@ -173,6 +178,21 @@ export default function RecruiterDashboard() {
     setLoading(true)
     await fetchCandidates(job.id)
     setLoading(false)
+  }
+
+  const fetchResume = async (resumeId: number) => {
+    setResumeLoading(true)
+    setShowResume(true)
+    try {
+      const res = await axios.get(`${API_BASE}/recruiter/resume/${resumeId}`)
+      setResumeText(res.data.text || "")
+      setResumeDownloadUrl(res.data.download_url || null)
+    } catch (err) {
+      console.error(err)
+      setResumeText("Failed to load resume.")
+    } finally {
+      setResumeLoading(false)
+    }
   }
 
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -447,6 +467,15 @@ export default function RecruiterDashboard() {
                           </p>
                        </div>
                     </div>
+                    <div className="absolute top-4 right-16 hidden sm:block">
+                      <button
+                        onClick={() => selectedCandidate && fetchResume(selectedCandidate.id)}
+                        className="h-10 px-4 rounded-full bg-white hover:bg-black/5 flex items-center gap-2 transition-shadow border border-black/5"
+                      >
+                        {resumeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                        <span className="text-sm font-bold text-black/60">View Resume</span>
+                      </button>
+                    </div>
                     <button className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 h-10 w-10 rounded-full hover:bg-black/5 flex items-center justify-center transition-colors shrink-0" onClick={() => setShowCandidateModal(false)}>
                       <X className="w-5 h-5" />
                     </button>
@@ -511,6 +540,28 @@ export default function RecruiterDashboard() {
                           </div>
                         </div>
                       )}
+
+                        {showResume && (
+                          <div className="mt-8 p-6 bg-white rounded-2xl border border-black/5">
+                            <h4 className="text-sm font-bold text-black/40 uppercase tracking-widest px-1">Resume</h4>
+                            <div className="mt-3 text-sm text-slate-800 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                              {resumeLoading ? (
+                                <div className="py-6 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-black/40" /></div>
+                              ) : (
+                                <>
+                                  <pre className="text-sm font-mono whitespace-pre-wrap">{resumeText}</pre>
+                                  {resumeDownloadUrl ? (
+                                    <div className="mt-4">
+                                      <a href={`${API_BASE}${resumeDownloadUrl}`} target="_blank" rel="noreferrer" className="inline-block px-4 py-2 bg-black text-[#ccff00] rounded-xl font-bold">Open Document</a>
+                                    </div>
+                                  ) : (
+                                    <div className="mt-4 text-xs text-slate-400 italic">Original document not available. Re-upload to persist.</div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                       <div className="grid md:grid-cols-2 gap-12">
                         {/* Behavioral Summary */}

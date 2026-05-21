@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import List, Optional
+import tempfile, os
+from pathlib import Path
 
-from database import SessionLocal, User, Assessment, get_assessments_by_user, create_assessment
+from database import SessionLocal, User, Assessment, JobDescription, get_assessments_by_user, create_assessment, create_resume
 from api_utils import get_session, update_session
 from code_executor import execute_code
 from dependencies import get_detectors
@@ -72,6 +74,84 @@ def get_resume_suggestions(user_id: int = 2):
         "ats_score": last_resume.ats_score,
         "file_name": last_resume.file_name
     }
+
+@router.post("/individual/apply")
+async def apply_to_job(
+    job_id: int = Form(...),
+    user_id: int = Form(...),
+    file: UploadFile = File(...),
+):
+    """Candidate uploads their resume to apply for a specific job."""
+    logger.info(f"User {user_id} applying to job {job_id} with file: {file.filename}")
+
+    db_session = SessionLocal()
+    job = db_session.query(JobDescription).filter(JobDescription.id == job_id).first()
+    candidate = db_session.query(User).filter(User.id == user_id).first()
+    db_session.close()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if not candidate:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check already applied
+    from database import Resume
+    db_check = SessionLocal()
+    already = db_check.query(Resume).filter(
+        Resume.jd_id == job_id,
+        Resume.candidate_email == candidate.email
+    ).first()
+    db_check.close()
+    if already:
+        raise HTTPException(status_code=409, detail="You have already applied to this job.")
+
+    suffix = Path(file.filename).suffix if file.filename else ".pdf"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    try:
+        from extractor import extract_resume
+        from vector_store import store_resume_chunks, store_jd_requirements_tagged, clear_collections
+        from test_main_cli import _extract_jd_requirements, _extract_resume_skill_items
+        import agent_3_validator
+
+        clear_collections()
+        chunks = extract_resume(tmp_path)
+        store_resume_chunks(chunks)
+        jd_items = _extract_jd_requirements(job.raw_text)
+        resume_items = _extract_resume_skill_items(chunks)
+        store_jd_requirements_tagged(jd_items, resume_items, job.title)
+        ats = agent_3_validator.run(job.raw_text)
+
+        result_data = {
+            "ats_score": ats.ats_score,
+            "matching_skills": [s.model_dump() if hasattr(s, "model_dump") else s.dict() for s in ats.matching_skills],
+            "missing_skills": [s.model_dump() if hasattr(s, "model_dump") else s.dict() for s in ats.missing_skills],
+        }
+
+        resume = create_resume(
+            candidate_email=candidate.email,
+            file_path=tmp_path,
+            file_name=file.filename or "resume.pdf",
+            jd_id=job_id,
+            analysis_data=result_data,
+        )
+
+        return {
+            "status": "success",
+            "resume_id": resume.id,
+            "ats_score": ats.ats_score,
+            "matching_count": len(ats.matching_skills),
+            "missing_count": len(ats.missing_skills),
+        }
+    except Exception as e:
+        logger.error(f"Apply failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Application processing failed: {str(e)}")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
 
 class CodeExecuteRequest(BaseModel):
     code: str

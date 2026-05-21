@@ -67,6 +67,9 @@ class JobDescription(Base):
     title = Column(String, nullable=False)
     raw_text = Column(Text, nullable=False)
     requirements = Column(JSON, default=list)
+    location = Column(String, nullable=True)
+    department = Column(String, nullable=True)
+    collaborators = Column(JSON, default=list)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     recruiter = relationship("User", back_populates="jobs")
@@ -205,14 +208,17 @@ def get_user_by_email(email: str) -> Optional[User]:
         db.close()
 
 
-def create_job(recruiter_id: int, title: str, raw_text: str, requirements: list) -> JobDescription:
+def create_job(recruiter_id: int, title: str, raw_text: str, requirements: list, location: str = None, department: str = None, collaborators: list = None) -> JobDescription:
     db = SessionLocal()
     try:
         job = JobDescription(
             recruiter_id=recruiter_id,
             title=title,
             raw_text=raw_text,
-            requirements=requirements
+            requirements=requirements,
+            location=location,
+            department=department,
+            collaborators=collaborators or []
         )
         db.add(job)
         db.commit()
@@ -226,6 +232,31 @@ def get_jobs(recruiter_id: int) -> list:
     db = SessionLocal()
     try:
         return db.query(JobDescription).options(joinedload(JobDescription.resumes)).filter(JobDescription.recruiter_id == recruiter_id).all()
+    finally:
+        db.close()
+
+def get_all_jobs() -> list:
+    db = SessionLocal()
+    try:
+        return db.query(JobDescription).options(joinedload(JobDescription.resumes)).order_by(JobDescription.created_at.desc()).all()
+    finally:
+        db.close()
+
+def update_job(job_id: int, title: str, raw_text: str, requirements: list, location: str = None, department: str = None, collaborators: list = None) -> Optional[JobDescription]:
+    db = SessionLocal()
+    try:
+        job = db.query(JobDescription).filter(JobDescription.id == job_id).first()
+        if job:
+            job.title = title
+            job.raw_text = raw_text
+            job.requirements = requirements
+            job.location = location
+            job.department = department
+            job.collaborators = collaborators or []
+            db.commit()
+            db.refresh(job)
+            return job
+        return None
     finally:
         db.close()
 
@@ -364,6 +395,7 @@ def update_user_profile(user_id, data):
         user = db_session.query(User).filter(User.id == user_id).first()
         if user:
             if 'full_name' in data: user.full_name = data['full_name']
+            if 'email' in data: user.email = data['email']
             if 'bio' in data: user.bio = data['bio']
             if 'location' in data: user.location = data['location']
             if 'avatar_url' in data: user.avatar_url = data['avatar_url']

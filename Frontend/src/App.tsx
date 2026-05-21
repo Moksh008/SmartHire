@@ -14,6 +14,7 @@ import Team from "@/pages/Team/Team"
 import AssessmentSuite from "@/pages/Interview/AssessmentSuite"
 import Screening from "@/pages/Screening/Screening"
 import Profile from "@/pages/Individual/Profile"
+import JobListings from "@/pages/Jobs/JobListings"
 import PreviewPage from "@/pages/Preview"
 import ControlledChaos from "@/components/ui/ControlledChaos"
 
@@ -47,6 +48,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={["INDIVIDUAL"]} />}>
           <Route path="/individual/assessment" element={<AssessmentSuite />} />
           <Route path="/individual/profile" element={<Profile />} />
+          <Route path="/individual/jobs" element={<JobListings />} />
         </Route>
       </Routes>
     </AuthProvider>

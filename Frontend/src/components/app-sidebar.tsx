@@ -11,6 +11,7 @@ import {
   Briefcase,
   User,
   Target,
+  Globe,
 } from "lucide-react"
 
 import {
@@ -32,10 +33,6 @@ const recruiterNavItems = [
     title: "Overview",
     url: "/dashboard",
     icon: Home,
-  },
-  {
-    url: "/dashboard",
-    icon: Briefcase,
   },
   {
     title: "Job Openings",
@@ -64,6 +61,11 @@ const individualNavItems = [
     title: "Take Assessment",
     url: "/individual/assessment",
     icon: Target,
+  },
+  {
+    title: "Job Listings",
+    url: "/individual/jobs",
+    icon: Globe,
   },
   {
     title: "Profile",
