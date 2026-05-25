@@ -32,7 +32,7 @@ export default function Login() {
 
     try {
       const res = await api.post(`/auth/login`, {
-        email,
+        email: email.trim().toLowerCase(),
         password
       });
 
@@ -40,7 +40,7 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.detail || "Invalid email or password.");
+      setError(err.response?.data?.detail || err.message || "Invalid email or password.");
     } finally {
       setIsLoading(false);
     }
@@ -55,12 +55,15 @@ export default function Login() {
 
       if (!email) throw new Error("No email returned from Google");
 
-      const res = await api.post(`/auth/google`, { email });
+      const res = await api.post(`/auth/google`, { 
+        email: email.trim().toLowerCase(), 
+        role: roleType || "INDIVIDUAL" 
+      });
       login(res.data);
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
-      setError("Google login failed.");
+      setError(err.response?.data?.detail || err.message || "Google login failed.");
     } finally {
       setIsLoading(false);
     }

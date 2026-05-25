@@ -18,6 +18,7 @@ class LoginRequest(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     email: str
+    role: Optional[str] = None
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -33,7 +34,7 @@ def register(req: RegisterRequest):
     logger.info(f"Registering new user: {req.email}")
     try:
         user = create_user(req.email, req.password, req.role)
-        return {"id": user.id, "email": user.email, "role": user.role}
+        return {"id": user.id, "email": user.email, "role": user.role, "token": f"demo-token-{user.id}"}
     except Exception as e:
         logger.error(f"Registration error: {e}")
         if "UNIQUE constraint" in str(e):
@@ -51,8 +52,8 @@ def login(req: LoginRequest):
 
 @router.post("/google")
 def google_auth(req: GoogleAuthRequest):
-    logger.info(f"Google auth for: {req.email}")
-    user = get_or_create_google_user(req.email)
+    logger.info(f"Google auth for: {req.email}, role: {req.role}")
+    user = get_or_create_google_user(req.email, req.role)
     return {"id": user.id, "email": user.email, "role": user.role, "token": f"google-token-{user.id}"}
 
 @user_router.put("/profile")

@@ -26,7 +26,7 @@ export default function Signup() {
 
     try {
       const res = await api.post(`/auth/register`, {
-        email,
+        email: email.trim().toLowerCase(),
         password,
         role
       });
@@ -35,7 +35,7 @@ export default function Signup() {
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.detail || "Failed to create account.");
+      setError(err.response?.data?.detail || err.message || "Failed to create account.");
     } finally {
       setIsLoading(false);
     }
@@ -50,13 +50,16 @@ export default function Signup() {
       
       if (!email) throw new Error("No email returned from Google");
       
-      const res = await api.post(`/auth/google`, { email });
+      const res = await api.post(`/auth/google`, { 
+        email: email.trim().toLowerCase(), 
+        role 
+      });
       login(res.data);
       
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
-      setError("Google signup failed.");
+      setError(err.response?.data?.detail || err.message || "Google signup failed.");
     } finally {
       setIsLoading(false);
     }

@@ -154,8 +154,9 @@ def get_db():
 
 
 def create_user(email: str, password: str, role: str) -> User:
+    email_normalized = email.strip().lower()
     password_hash = pwd_context.hash(password)
-    user = User(email=email, password_hash=password_hash, role=role)
+    user = User(email=email_normalized, password_hash=password_hash, role=role)
     db = SessionLocal()
     try:
         db.add(user)
@@ -166,20 +167,22 @@ def create_user(email: str, password: str, role: str) -> User:
         db.close()
 
 
-def get_or_create_google_user(email: str) -> User:
+def get_or_create_google_user(email: str, role: Optional[str] = None) -> User:
+    email_normalized = email.strip().lower()
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.email == email).first()
+        user = db.query(User).filter(User.email == email_normalized).first()
         if not user:
-            # Specific mappings requested by user
-            role = "INDIVIDUAL" # Default
-            if email == "moksh8600.beaift24@chitkara.edu.in":
-                role = "RECRUITER"
-            elif email == "mokshkulshrestha@gmail.com":
+            # If no role is provided, default to INDIVIDUAL, but check hardcoded emails
+            if not role:
                 role = "INDIVIDUAL"
+                if email_normalized == "moksh8600.beaift24@chitkara.edu.in":
+                    role = "RECRUITER"
+                elif email_normalized == "mokshkulshrestha@gmail.com":
+                    role = "INDIVIDUAL"
             
             # For Google users, we don't need a real password hash
-            user = User(email=email, password_hash="GOOGLE_OAUTH_ACCOUNT", role=role)
+            user = User(email=email_normalized, password_hash="GOOGLE_OAUTH_ACCOUNT", role=role)
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -188,11 +191,11 @@ def get_or_create_google_user(email: str) -> User:
         db.close()
 
 
-
 def authenticate_user(email: str, password: str) -> Optional[User]:
+    email_normalized = email.strip().lower()
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.email == email).first()
+        user = db.query(User).filter(User.email == email_normalized).first()
         if user and pwd_context.verify(password, user.password_hash):
             return user
         return None
@@ -201,9 +204,10 @@ def authenticate_user(email: str, password: str) -> Optional[User]:
 
 
 def get_user_by_email(email: str) -> Optional[User]:
+    email_normalized = email.strip().lower()
     db = SessionLocal()
     try:
-        return db.query(User).filter(User.email == email).first()
+        return db.query(User).filter(User.email == email_normalized).first()
     finally:
         db.close()
 
