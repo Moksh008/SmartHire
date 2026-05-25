@@ -235,15 +235,92 @@ export function TestStep({ sessionId, data, resumeId, interviewAnswers, onComple
                 <RotateCcw className="w-6 h-6 sm:w-8 sm:h-8 text-black" />
               </button>
             </div>
-            {codeOutput && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <div className={`p-4 sm:p-8 border-4 border-black shadow-[4px_4px_0px_black] sm:shadow-[8px_8px_0px_black] ${codeOutput.success ? "bg-[#ccff00]" : "bg-[#ff5e00] text-white"}`}>
-                  <p className="font-black uppercase tracking-tighter text-base sm:text-xl italic">
-                    {codeOutput.success ? "✓ ALL_RUNTIME_VECTORS_VALIDATED" : `✕ RUNTIME_ERROR: ${codeOutput.error}`}
-                  </p>
-                </div>
-              </motion.div>
-            )}
+            {codeOutput && (() => {
+              const cleanErrorMessage = (err: string) => {
+                if (!err) return "";
+                let clean = err.replace(/File ".*?py",/g, "In your code,");
+                clean = clean.replace(/[a-zA-Z]:\\[\\\w\s.-]*\\/g, "");
+                return clean;
+              };
+
+              const hasTestResults = codeOutput.success && codeOutput.test_results;
+              const allTestsPassed = hasTestResults && codeOutput.test_results.length > 0 && codeOutput.test_results.every((t: any) => t.passed);
+              const passedCount = hasTestResults ? codeOutput.test_results.filter((t: any) => t.passed).length : 0;
+              const totalCount = hasTestResults ? codeOutput.test_results.length : 0;
+
+              return (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  {/* Compilation/Runtime Exception */}
+                  {!codeOutput.success && (
+                    <div className="p-5 sm:p-8 border-4 border-black bg-[#ff5e00] text-white shadow-[4px_4px_0px_black] sm:shadow-[8px_8px_0px_black]">
+                      <p className="font-black uppercase tracking-tighter text-base sm:text-xl italic mb-3">
+                        ✕ RUNTIME_OR_COMPILATION_ERROR
+                      </p>
+                      <pre className="font-mono text-[10px] sm:text-xs p-4 bg-black/40 border-2 border-black rounded-none whitespace-pre-wrap break-all leading-relaxed text-[#ffaa77] font-bold">
+                        {cleanErrorMessage(codeOutput.error)}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* Successful Run */}
+                  {codeOutput.success && (
+                    <div className={`p-5 sm:p-8 border-4 border-black shadow-[4px_4px_0px_black] sm:shadow-[8px_8px_0px_black] ${
+                      allTestsPassed ? "bg-[#ccff00] text-black" : "bg-[#fffbf0] text-black"
+                    }`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <p className="font-black uppercase tracking-tighter text-base sm:text-xl italic">
+                          {allTestsPassed 
+                            ? "✓ ALL_RUNTIME_VECTORS_VALIDATED" 
+                            : `✕ RUNTIME_CHECK_FAILED (${passedCount} / ${totalCount} PASSED)`}
+                        </p>
+                        <span className={`px-4 py-1 border-2 border-black text-xs font-black uppercase italic shadow-[3px_3px_0px_black] self-start sm:self-auto ${
+                          allTestsPassed ? "bg-black text-[#ccff00]" : "bg-[#ff5e00] text-white"
+                        }`}>
+                          {allTestsPassed ? "ALL_PASS" : "FAIL"}
+                        </span>
+                      </div>
+
+                      {/* Display test cases if they exist */}
+                      {codeOutput.test_results && codeOutput.test_results.length > 0 && (
+                        <div className="space-y-3 mt-4">
+                          {codeOutput.test_results.map((t: any, i: number) => (
+                            <div 
+                              key={i} 
+                              className={`p-4 border-2 border-black rounded-none flex flex-col gap-2 font-mono text-[10px] sm:text-xs shadow-[3px_3px_0px_black] ${
+                                t.passed 
+                                  ? "bg-emerald-50 text-emerald-800" 
+                                  : "bg-rose-50 text-rose-800"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center font-black uppercase italic">
+                                <span>VECTOR_TEST_CASE_{i + 1}</span>
+                                <span>{t.passed ? "✓ VALIDATED" : "✕ MISMATCH"}</span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t-2 border-black/5">
+                                {t.input && (
+                                  <div>
+                                    <span className="text-[9px] uppercase font-black tracking-wider opacity-50 block">Input</span>
+                                    <span className="break-all font-bold">{t.input}</span>
+                                  </div>
+                                )}
+                                <div>
+                                  <span className="text-[9px] uppercase font-black tracking-wider opacity-50 block">Expected</span>
+                                  <span className="break-all font-bold">{t.expected}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] uppercase font-black tracking-wider opacity-50 block">Actual Output</span>
+                                  <span className="break-all font-bold">{t.actual}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })()}
           </div>
         </div>
  

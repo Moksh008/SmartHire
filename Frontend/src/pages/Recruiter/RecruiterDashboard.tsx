@@ -87,6 +87,10 @@ export default function RecruiterDashboard() {
   const [showResume, setShowResume] = useState(false)
   const [resumeDownloadUrl, setResumeDownloadUrl] = useState<string | null>(null)
 
+  const [showBulkQueueModal, setShowBulkQueueModal] = useState(false)
+  const [bulkQueue, setBulkQueue] = useState<{ file: File; status: "pending" | "processing" | "success" | "error"; score?: number; error?: string }[]>([])
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(-1)
+
   const [newJobTitle, setNewJobTitle] = useState("")
   const [newJobText, setNewJobText] = useState("")
   const [newJobRequirements, setNewJobRequirements] = useState("")
@@ -197,23 +201,52 @@ export default function RecruiterDashboard() {
 
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedJob || !e.target.files) return
-    setIsBulkUploading(true)
-    const formData = new FormData()
-    formData.append("job_id", selectedJob.id.toString())
-    Array.from(e.target.files).forEach(file => {
-      formData.append("files", file)
-    })
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
 
-    try {
-      await axios.post(`${API_BASE}/recruiter/upload-resumes`, formData)
-      fetchCandidates(selectedJob.id)
-      fetchJobs()
-    } catch (err) {
-      console.error(err)
-      alert("Bulk upload failed. Ensure the backend is active.")
-    } finally {
-      setIsBulkUploading(false)
+    // Initialize bulk queue state
+    const initialQueue = files.map(file => ({
+      file,
+      status: "pending" as const,
+    }))
+    setBulkQueue(initialQueue)
+    setShowBulkQueueModal(true)
+
+    // Clear input value so same files can be chosen again
+    e.target.value = ""
+
+    // Start sequential processing
+    setIsBulkUploading(true)
+    for (let i = 0; i < files.length; i++) {
+      setCurrentProcessingIndex(i)
+      setBulkQueue(prev => prev.map((item, idx) => idx === i ? { ...item, status: "processing" } : item))
+
+      const file = files[i]
+      const formData = new FormData()
+      formData.append("job_id", selectedJob.id.toString())
+      formData.append("files", file)
+
+      try {
+        const res = await axios.post(`${API_BASE}/recruiter/upload-resumes`, formData)
+        const result = res.data.results?.[0]
+        
+        if (result && !result.error) {
+          setBulkQueue(prev => prev.map((item, idx) => idx === i ? { ...item, status: "success", score: result.score } : item))
+        } else {
+          setBulkQueue(prev => prev.map((item, idx) => idx === i ? { ...item, status: "error", error: result?.error || "Processing failed" } : item))
+        }
+        
+        // Refresh candidates on screen dynamically
+        fetchCandidates(selectedJob.id)
+        fetchJobs()
+      } catch (err: any) {
+        console.error(err)
+        const errMsg = err.response?.data?.detail || err.message || "Network error"
+        setBulkQueue(prev => prev.map((item, idx) => idx === i ? { ...item, status: "error", error: errMsg } : item))
+      }
     }
+    setIsBulkUploading(false)
+    setCurrentProcessingIndex(-1)
   }
 
   const sortedCandidates = [...candidates].sort((a, b) => b.ats_score - a.ats_score)
@@ -621,6 +654,124 @@ export default function RecruiterDashboard() {
                         </button>
                      </div>
                   </div>
+                </motion.div>
+              </div>
+            )}
+
+            {showBulkQueueModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isBulkUploading && setShowBulkQueueModal(false)} />
+                <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-[#fffbf0] rounded-[2.5rem] p-8 sm:p-10 w-full max-w-3xl shadow-2xl border-2 border-black max-h-[85vh] flex flex-col overflow-hidden">
+                  
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6 shrink-0">
+                    <div className="space-y-1">
+                      <div className="inline-block bg-[#ff5e00]/10 text-[#ff5e00] px-3 py-0.5 text-[9px] font-bold uppercase rounded-full tracking-widest">
+                        Intelligence Pipeline
+                      </div>
+                      <h3 className="text-2xl font-black text-black tracking-tight uppercase flex items-center gap-2">
+                        <Zap className="w-6 h-6 text-[#ff5e00] fill-current" />
+                        Bulk_Resume_Screening
+                      </h3>
+                    </div>
+                    {!isBulkUploading && (
+                      <button className="h-10 w-10 rounded-full hover:bg-black/5 flex items-center justify-center border border-black/10" onClick={() => setShowBulkQueueModal(false)}>
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Summary Bar */}
+                  <div className="p-5 bg-white border-2 border-black rounded-2xl mb-6 shadow-[4px_4px_0px_black] shrink-0">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs font-black uppercase tracking-wider text-black/50">Overall_Progress</span>
+                      <span className="text-xs font-bold text-black uppercase">
+                        {bulkQueue.filter(q => q.status === "success" || q.status === "error").length} / {bulkQueue.length} Done
+                      </span>
+                    </div>
+                    <Progress 
+                      value={(bulkQueue.filter(q => q.status === "success" || q.status === "error").length / bulkQueue.length) * 100} 
+                      className="h-3 bg-black/5 border border-black/10 rounded-full overflow-hidden" 
+                    />
+                    <div className="flex justify-between items-center mt-3 text-[10px] font-bold uppercase tracking-widest text-black/40">
+                      <span>Queue Initialized</span>
+                      {isBulkUploading ? (
+                        <span className="text-[#ff5e00] animate-pulse flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Processing Resumes...
+                        </span>
+                      ) : (
+                        <span className="text-green-600">Batch Completed</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Queue List */}
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-2 min-h-0">
+                    {bulkQueue.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-4 bg-white border-2 rounded-2xl transition-all flex items-center justify-between gap-4 ${
+                          idx === currentProcessingIndex 
+                            ? "border-black shadow-[4px_4px_0px_black]" 
+                            : "border-black/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 shrink-0 ${
+                            item.status === "success" ? "bg-emerald-50 border-emerald-500 text-emerald-600" :
+                            item.status === "error" ? "bg-rose-50 border-rose-500 text-rose-500" :
+                            item.status === "processing" ? "bg-[#ccff00]/10 border-black text-black" :
+                            "bg-slate-50 border-slate-200 text-slate-300"
+                          }`}>
+                            {item.status === "success" ? <CheckCircle2 className="w-5 h-5" /> :
+                             item.status === "error" ? <AlertCircle className="w-5 h-5" /> :
+                             item.status === "processing" ? <Loader2 className="w-5 h-5 animate-spin" /> :
+                             <FileText className="w-5 h-5" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm text-black truncate">{item.file.name}</p>
+                            <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest mt-0.5">
+                              {item.status === "pending" ? "Queued in buffer" :
+                               item.status === "processing" ? "Extracting & Vectorizing..." :
+                               item.status === "success" ? `Successfully Processed (ATS Match)` :
+                               `Failed: ${item.error}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0">
+                          {item.status === "success" && item.score !== undefined && (
+                            <div className="bg-[#ccff00] text-black border-2 border-black shadow-[2px_2px_0px_black] px-3 py-1 rounded-xl text-xs font-black">
+                              {item.score.toFixed(0)}% Match
+                            </div>
+                          )}
+                          {item.status === "processing" && (
+                            <span className="text-[10px] font-bold text-black/40 uppercase tracking-widest flex items-center gap-1">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ff5e00]" /> Running
+                            </span>
+                          )}
+                          {item.status === "pending" && (
+                            <span className="text-[10px] font-bold text-black/30 uppercase tracking-widest">Pending</span>
+                          )}
+                          {item.status === "error" && (
+                            <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Error</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  {!isBulkUploading && (
+                    <div className="mt-6 pt-6 border-t-2 border-black shrink-0">
+                      <button 
+                        onClick={() => setShowBulkQueueModal(false)}
+                        className="w-full h-14 bg-black text-[#ccff00] font-bold rounded-2xl shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase text-sm tracking-widest"
+                      >
+                        Close Control Panel
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               </div>
             )}
