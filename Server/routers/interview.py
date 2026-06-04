@@ -219,7 +219,170 @@ def get_results(session_id: str):
         "behavior_summary": behavior_summary,
         "behavior_data": session.get("behavior_data", []),
         "mock_interview_feedback": session.get("mock_interview_feedback", {}),
-        "dsa_feedback": session.get("dsa_feedback", {})
+        "dsa_feedback": session.get("dsa_feedback", {}),
+        "adaptive_history": session.get("adaptive_history", [])
+    }
+
+class AdaptiveQuestionRequest(BaseModel):
+    session_id: str
+    current_difficulty: int  # 1 (Easy), 2 (Medium), 3 (Hard)
+    last_question: Optional[str] = None
+    last_answer: Optional[str] = None
+    elapsed_seconds: Optional[int] = 0
+
+@router.post("/interview/adaptive-next")
+def get_adaptive_next(req: AdaptiveQuestionRequest):
+    logger.info(f"Dynamic Adaptive request received for session {req.session_id}")
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    screener = session.get("screener", {})
+    ats_result = screener.get("ats_result", {})
+    missing_skills = [m.get("requirement", "") for m in ats_result.get("missing_skills", [])]
+    matching_skills = [m.get("requirement", "") for m in ats_result.get("matching_skills", [])]
+    
+    # 1. Early Termination Check: Suspicion Score (Proctor Trigger)
+    suspicion_score = float(session.get("suspicion_score", 0.0))
+    if suspicion_score >= 60.0:
+        return {
+            "terminate": True,
+            "reason": f"AI BIOMETRIC INTEGRITY SHIELD TRIGGERED SUSPICIOUS EVENT PATTERN (SUSPICION: {suspicion_score}%). MOCK INTERVIEW FORCE-TERMINATED FOR EVALUATION INTEGRITY.",
+            "next_question": None,
+            "difficulty": req.current_difficulty
+        }
+
+    adaptive_history = session.get("adaptive_history", [])
+
+    score = 5.0
+    feedback_notes = "Answer processed successfully."
+    next_diff = req.current_difficulty
+
+    if req.last_question and req.last_answer:
+        ans_clean = req.last_answer.strip().lower()
+        if not ans_clean or ans_clean in ["i don't know", "skip", "no idea", "pass", "no comment"] or len(ans_clean.split()) < 3:
+            stagnation_count = session.get("stagnation_count", 0) + 1
+            update_session(req.session_id, "stagnation_count", stagnation_count)
+            if stagnation_count >= 3:
+                return {
+                    "terminate": True,
+                    "reason": "CONSECUTIVE TECHNICAL STAGNATION TRIGGERED. CANDIDATE EXHIBITED PERSISTENT FAILURE TO RETRIEVE ANSWERS. MOCK INTERVIEW FORCE-TERMINATED.",
+                    "next_question": None,
+                    "difficulty": req.current_difficulty
+                }
+        else:
+            update_session(req.session_id, "stagnation_count", 0)
+
+        import requests
+        import json
+        import os
+        OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+        MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
+
+        grade_prompt = f"""You are a technical interviewer. Evaluate this technical answer:
+Question: {req.last_question}
+Answer: {req.last_answer}
+
+Rate accuracy, clarity, and depth on a score from 1.0 to 10.0. Return ONLY valid JSON:
+{{
+  "score": float_value,
+  "feedback": "1 sentence critique"
+}}"""
+        try:
+            payload = {
+                "model": MODEL,
+                "prompt": grade_prompt,
+                "stream": False,
+                "options": {"temperature": 0.2, "num_predict": 128}
+            }
+            resp = requests.post(OLLAMA_URL, json=payload, timeout=20)
+            if resp.status_code == 200:
+                raw = resp.json().get("response", "").strip()
+                clean = raw.replace("```json", "").replace("```", "").strip()
+                start = clean.find("{")
+                end = clean.rfind("}") + 1
+                if start != -1 and end > start:
+                    clean = clean[start:end]
+                eval_data = json.loads(clean)
+                score = float(eval_data.get("score", 5.0))
+                feedback_notes = eval_data.get("feedback", "Answer evaluated.")
+        except Exception as e:
+            logger.warning(f"Dynamic grading failed: {e}. Using fallback score.")
+            score = 6.0
+
+        if score >= 7.5:
+            next_diff = min(3, req.current_difficulty + 1)
+        elif score <= 4.0:
+            next_diff = max(1, req.current_difficulty - 1)
+
+        adaptive_history.append({
+            "question": req.last_question,
+            "answer": req.last_answer,
+            "grade": score,
+            "difficulty": req.current_difficulty,
+            "time_taken_seconds": req.elapsed_seconds,
+            "feedback": feedback_notes
+        })
+        update_session(req.session_id, "adaptive_history", adaptive_history)
+
+    # 2. Next Question Generation
+    diff_labels = {1: "Fundamental/Easy", 2: "Intermediate/Medium", 3: "Advanced/Hard"}
+    
+    question_prompt = f"""You are an advanced AI technical interviewer. 
+Target Role: {screener.get("ats_result", {}).get("summary", "Software Engineer")}
+Candidate Matching Skills: {matching_skills[:3]}
+Candidate Gaps/Missing Skills: {missing_skills[:3]}
+
+Generate exactly ONE technical/behavioral or scenario-based question targeted at level: {diff_labels[next_diff]}.
+Focus on gaps and testing their adaptability. Do not repeat previous questions.
+Return ONLY valid JSON:
+{{
+  "question": "question text"
+}}"""
+
+    next_question = "Explain your background with software engineering and container orchestration."
+    try:
+        import requests
+        import json
+        import os
+        OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+        MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
+        payload = {
+            "model": MODEL,
+            "prompt": question_prompt,
+            "stream": False,
+            "options": {"temperature": 0.4, "num_predict": 128}
+        }
+        resp = requests.post(OLLAMA_URL, json=payload, timeout=20)
+        if resp.status_code == 200:
+            raw = resp.json().get("response", "").strip()
+            clean = raw.replace("```json", "").replace("```", "").strip()
+            start = clean.find("{")
+            end = clean.rfind("}") + 1
+            if start != -1 and end > start:
+                clean = clean[start:end]
+            q_data = json.loads(clean)
+            next_question = q_data.get("question", next_question)
+    except Exception as e:
+        logger.warning(f"Ollama next question failed: {e}. Using pre-generated fallback.")
+        all_pre_qs = [
+            *(screener.get("interview_questions", {}).get("technical", [])),
+            *(screener.get("interview_questions", {}).get("behavioral", [])),
+            *(screener.get("interview_questions", {}).get("scenario_based", []))
+        ]
+        history_len = len(adaptive_history)
+        if all_pre_qs and history_len < len(all_pre_qs):
+            next_question = all_pre_qs[history_len]
+        else:
+            next_question = f"Describe how you handle scaling and maintaining operations in high throughput projects."
+
+    return {
+        "terminate": False,
+        "reason": None,
+        "next_question": next_question,
+        "difficulty": next_diff,
+        "score_on_last": score,
+        "feedback_on_last": feedback_notes
     }
 
 # Connect websocket to main router or root app

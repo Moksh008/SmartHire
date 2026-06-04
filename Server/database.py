@@ -328,7 +328,33 @@ def get_resumes_by_jd(jd_id: int) -> list:
 def create_assessment(resume_id: int, individual_id: int, mcq_score: float, dsa_code: str, dsa_feedback: dict, integrity_score: float, behavior_summary: dict = None, interview_feedback: dict = None) -> Assessment:
     db = SessionLocal()
     try:
-        overall = (mcq_score * 0.5) + (integrity_score * 0.5)
+        # Fetch ATS score from resume
+        resume = db.query(Resume).filter(Resume.id == resume_id).first()
+        ats_score = resume.ats_score if resume else 75.0
+        
+        # Calculate coding sandbox score based on test cases passing or manual execution status
+        dsa_success = dsa_feedback.get("success", False) if isinstance(dsa_feedback, dict) else False
+        code_score = 100.0 if dsa_success else 20.0
+        
+        # Calculate verbal fluency score based on filler rate or default
+        verbal_score = 75.0
+        if interview_feedback and isinstance(interview_feedback, dict):
+            voice_analysis = interview_feedback.get("voice_analysis", {})
+            if voice_analysis and isinstance(voice_analysis, dict):
+                filler_rate = voice_analysis.get("filler_rate", 0)
+                verbal_score = max(0.0, 100.0 - (float(filler_rate) * 5.0))
+        
+        # Weighted Hiring Readiness Score synthesis:
+        # ATS (20%) + Verbal (30%) + Code (25%) + MCQ (15%) + Integrity (10%)
+        overall = (
+            (float(ats_score) * 0.20) +
+            (float(verbal_score) * 0.30) +
+            (float(code_score) * 0.25) +
+            (float(mcq_score) * 0.15) +
+            (float(integrity_score) * 0.10)
+        )
+        overall = round(overall, 2)
+        
         assessment = Assessment(
             resume_id=resume_id,
             individual_id=individual_id,

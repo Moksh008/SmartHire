@@ -189,7 +189,7 @@ python -c "from database import init_db; init_db()"
 docker build -t code-sandbox:latest -f Dockerfile.sandbox .
 
 # Start the FastAPI Server
-uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### 3. Frontend Setup

@@ -177,11 +177,19 @@ class AssessmentSubmitRequest(BaseModel):
 @router.post("/individual/submit-assessment")
 def submit_assessment(req: AssessmentSubmitRequest):
     logger.info(f"Submitting assessment for session: {req.session_id}")
+    
+    # Save feedback to session
+    session = get_session(req.session_id)
+    interview_answers = req.interview_answers
+    if not interview_answers and session:
+        interview_answers = session.get("adaptive_history", [])
+        logger.info(f"Fetched {len(interview_answers)} adaptive answers from session logs.")
+
     # Evaluate interview answers using agent_5
     mock_interview_feedback = {}
-    if req.interview_answers:
+    if interview_answers:
         try:
-            mock_interview_feedback = agent_5_interview_evaluator.run(req.interview_answers)
+            mock_interview_feedback = agent_5_interview_evaluator.run(interview_answers)
         except Exception as e:
             logger.error(f"[submit-assessment] Interview evaluation failed: {e}")
             mock_interview_feedback = {
@@ -191,8 +199,6 @@ def submit_assessment(req: AssessmentSubmitRequest):
                 "technical_accuracy": "N/A"
             }
 
-    # Save feedback to session
-    session = get_session(req.session_id)
     if session:
         update_session(req.session_id, "mock_interview_feedback", mock_interview_feedback)
         update_session(req.session_id, "dsa_feedback", req.dsa_feedback)

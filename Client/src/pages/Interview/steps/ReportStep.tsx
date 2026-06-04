@@ -57,6 +57,26 @@ export function ReportStep({ sessionId, onReset }: ReportStepProps) {
   const integrityScore = Math.max(0, 100 - integrityLogs.reduce((acc: number, log: any) => acc + (log.score_increment || 0), 0))
   const mockInterviewFeedback = data?.mock_interview_feedback || {}
   const dsaFeedback = data?.dsa_feedback || {}
+  const adaptiveHistory = data?.adaptive_history || []
+
+  const atsScore = screener?.ats_result?.ats_score || 75
+  const mcqScore = data?.mcq_score || 80
+  const codeScore = dsaFeedback?.success ? 100 : 20
+  const verbalScore = Math.max(0, 100 - (mockInterviewFeedback.voice_analysis?.filler_rate * 5 || 15))
+  
+  const avgResponseTime = adaptiveHistory.length > 0
+    ? Math.round(adaptiveHistory.reduce((acc: number, item: any) => acc + (item.time_taken_seconds || 0), 0) / adaptiveHistory.length)
+    : 0
+
+  const blendedScore = Math.round(
+    (atsScore * 0.20) +
+    (verbalScore * 0.30) +
+    (codeScore * 0.25) +
+    (mcqScore * 0.15) +
+    (integrityScore * 0.10)
+  )
+
+  const hiringDecision = blendedScore >= 80 ? "STRONG HIRE" : blendedScore >= 60 ? "CONSIDER" : "DO NOT HIRE"
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 sm:space-y-20 pb-32 px-4 sm:px-0">
@@ -70,6 +90,63 @@ export function ReportStep({ sessionId, onReset }: ReportStepProps) {
         </motion.div>
         <h1 className="text-4xl sm:text-7xl font-black text-black uppercase tracking-tighter italic leading-none">Assessment_Intel_Report</h1>
         <p className="text-black font-bold uppercase text-base sm:text-2xl italic opacity-40 max-w-3xl mx-auto underline decoration-black decoration-2 sm:decoration-4 underline-offset-8">End-to-end technical performance & career trajectory analysis.</p>
+      </div>
+
+      {/* Dynamic Blended Hiring Readiness Dashboard */}
+      <div className="p-6 sm:p-12 border-4 border-black bg-[#ccff00] text-black shadow-[8px_8px_0px_black] sm:shadow-[16px_16px_0px_black] space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="bg-black text-white px-4 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_#ff5e00] italic inline-block">
+              EXPLAINABLE_HIRING_INTELLIGENCE
+            </div>
+            <h2 className="text-3xl sm:text-6xl font-black uppercase tracking-tighter italic leading-none">CAREER_READINESS_INDEX</h2>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-6xl sm:text-9xl font-black tracking-tighter italic leading-none">{blendedScore}%</span>
+            <span className="text-xs font-black uppercase tracking-widest opacity-60">Readiness</span>
+          </div>
+        </div>
+
+        {/* Progress Bar with Neo Grid */}
+        <div className="border-4 border-black bg-black p-1.5 h-10 sm:h-12 shadow-[4px_4px_0px_black] relative overflow-hidden">
+          <div className="h-full bg-[#ccff00] transition-all duration-1000 ease-out relative" style={{ width: `${blendedScore}%` }}>
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.15)_10px,rgba(0,0,0,0.15)_20px)]" />
+          </div>
+        </div>
+
+        {/* Verdict Badge Matrix */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 border-2 border-black bg-white shadow-[4px_4px_0px_black]">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 italic">Hiring_Verdict</p>
+            <p className={`text-2xl sm:text-3xl font-black italic uppercase ${
+              blendedScore >= 80 ? "text-emerald-600" : blendedScore >= 60 ? "text-[#ff5e00]" : "text-rose-600"
+            }`}>
+              {hiringDecision}
+            </p>
+          </div>
+          <div className="p-6 border-2 border-black bg-white shadow-[4px_4px_0px_black]">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 italic">Weighted_Breakdown</p>
+            <div className="font-mono text-[10px] uppercase font-black space-y-1">
+              <div className="flex justify-between"><span>Resume Relevance (20%)</span><span>{atsScore}%</span></div>
+              <div className="flex justify-between"><span>Verbal Q/A Fluency (30%)</span><span>{verbalScore}%</span></div>
+              <div className="flex justify-between"><span>Monaco Coding sandbox (25%)</span><span>{codeScore}%</span></div>
+            </div>
+          </div>
+          <div className="p-6 border-2 border-black bg-white shadow-[4px_4px_0px_black]">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 italic">Operational_Status</p>
+            <div className="font-mono text-[10px] uppercase font-black space-y-1">
+              <div className="flex justify-between"><span>MCQ Core Index (15%)</span><span>{mcqScore}%</span></div>
+              <div className="flex justify-between"><span>Proctoring Integrity (10%)</span><span>{integrityScore}%</span></div>
+              <div className="flex justify-between"><span>Avg Response Time</span><span>{avgResponseTime}s</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Diagnostic Explainability Panel */}
+        <div className="p-4 sm:p-6 bg-black text-[#ccff00] border-2 border-black shadow-[4px_4px_0px_black] text-xs font-mono tracking-tight uppercase leading-relaxed opacity-95">
+          <span className="font-black text-[#ff5e00] mr-2">// EXPLAINABLE_DECISION_PATHWAY:</span>
+          Candidate demonstrated an ATS relevance score of {atsScore}% vs Job Description. Coding sandbox completed with {dsaFeedback?.success ? "successful validation checks" : "errors/warnings"}. Proctoring engine verified trust levels at {integrityScore}%. Verbal communication evaluated at {verbalScore}% fluency with filler rates accounted for. Blended composite recommendation generated successfully.
+        </div>
       </div>
 
       {/* Section 1: ATS Resume Suggestions */}
