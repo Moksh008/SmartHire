@@ -1,0 +1,16 @@
+diff --git a/package.json b/package.json
+index 1234567..89abcdef 100644
+--- a/package.json
++++ b/package.json
+@@ -10,7 +10,7 @@
+     "axios": "^0.21.1",
+     "react": "^17.0.2",
+     "react-dom": "^17.0.2",
+-    "react-server-components": "^19.2.4"
++    "axios": "^1.15.0",
++    "react-server-components": "^19.2.5"
+   },
+   "devDependencies": {
+     "jest": "^26.6.0"
+   }
+ }
