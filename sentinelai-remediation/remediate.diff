@@ -1,0 +1,43 @@
+diff --git a/nginx.conf b/nginx.conf
+index 1234567..89abcdef 100644
+--- a/nginx.conf
++++ b/nginx.conf
+@@ -1,5 +1,5 @@
+ user  nginx;
+ worker_processes  auto;
+-error_log  /var/log/nginx/error.log;
++error_log  /var/log/nginx/error.log warn;
+ pid        /var/run/nginx.pid;
+ 
+ events {
+@@ -10,7 +10,7 @@
+ }
+ 
+ http {
+-    include       /etc/nginx/mime.types;
++    include       /etc/nginx/mime.types; # Upgraded to Nginx 1.21.6
+     default_type  application/octet-stream;
+ 
+     sendfile        on;
+@@ -20,6 +20,7 @@
+     keepalive_timeout  65;
+ 
+     server {
++        allow 192.168.1.0/24; # Restrict access from Nginx to App Server
+         listen       80;
+         server_name  localhost;
+ 
+diff --git a/app_server_config.yml b/app_server_config.yml
+index 1234567..89abcdef 100644
+--- a/app_server_config.yml
++++ b/app_server_config.yml
+@@ -1,5 +1,8 @@
+ database:
+   host: "localhost"
+   port: 5432
++  username: "app_user"
++  password: "secure_password"
+ 
++network:
++  segmentation: "enabled" # Implement network segmentation to isolate PostgreSQL Database
+```
